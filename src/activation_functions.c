@@ -2,7 +2,7 @@
 
 #include "../include/activation_functions.h"
 
-void relu(linearLayer* layer)
+void relu(Layer* layer)
 {
     int col = layer->output->shape.x;
     int row = layer->output->shape.y;
@@ -19,7 +19,7 @@ void relu(linearLayer* layer)
     }
 }
 
-void relu_deriv(linearLayer* layer)
+void relu_deriv(Layer* layer)
 {
     int col = layer->output->shape.x;
     int row = layer->output->shape.y;

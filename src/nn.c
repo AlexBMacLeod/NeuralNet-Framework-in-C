@@ -87,11 +87,12 @@ void displayBackward() {
 }
 
 //insert link at the first location
-void insertFirst(float data[COLS]) {
+void insertFirst(char *activation, int in, int out) {
 
    //create a link
    struct node *link = (struct node*) malloc(sizeof(struct node));
-   memcpy(link->row, data, sizeof(float)*30);
+
+   link->layer = createLayer(activation, in, out);
 	
    if(isEmpty()) {
       //make it the last link

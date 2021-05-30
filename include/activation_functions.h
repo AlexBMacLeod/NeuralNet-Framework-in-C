@@ -4,8 +4,10 @@
 
 #include "layer.h"
 
-void relu(linearLayer*);
+void relu(Layer*);
 
-void relu_deriv(linearLayer*);
+void relu_deriv(Layer*);
+
+void none(Layer*);
 
 #endif

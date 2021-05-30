@@ -2,10 +2,12 @@
 #ifndef _NN_H
 #define _NN_H
 
+#include "layer.h"
+
 struct node {
     struct node* next; // Pointer to next node in DLL
     struct node* prev; // Pointer to previous node in DLL
-    float row[30];
+    Layer *layer;
 };
 
 extern struct node *head = NULL;
@@ -22,9 +24,9 @@ void displayForward();
 
 void displayBackward();
 
-void insertFirst(float *data);
+void insertFirst(char *, int, int);
 
-void insertLast(float data[]);
+void insertLast(float *);
 
 struct node* deleteFirst();
 

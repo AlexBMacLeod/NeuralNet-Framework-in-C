@@ -20,19 +20,18 @@ fn(list_for_apply[i]);                                              \
 #define free_all(...) apply_func(void, free, __VA_ARGS__);
 
 
-static void freeLayer( linearLayer* layer)
+static void freeLayer( Layer* layer)
 {
     layer->weights->freeMem(layer->weights);
-    //freeMatrix(layer->derivative);
+    //freeMatrix(Layer->derivative);
     layer->output->freeMem(layer->output);
     layer->input->freeMem(layer->input);
     free(layer);
 }
 
-void initLinear( linearLayer **layer, int in, int out)
+void initLinear( Layer **layer, char *activation, int in, int out)
 {
-    *layer = malloc(sizeof(linearLayer));
-
+    
     //layer->derivative = createMatrix( in, out);
     (*layer)->weights = createMatrix( in, out);
     (*layer)->output = createMatrix( out, 1);
@@ -41,16 +40,33 @@ void initLinear( linearLayer **layer, int in, int out)
     (*layer)->in = in;
     (*layer)->out = out;
     makeWeights( (*layer)->weights);
+    switch(*activation)
+    {
+        case 'relu':
+            (*layer)->actFunc = relu;
+            (*layer)->derivFunc = relu_deriv;
+            break;
+        default:
+            (*layer)->actFunc = none;
+            (*layer)->derivFunc = none;
+    }
     //layer->actFunc = funcs->func;
     //layer->derivFunc = funcs->deriv;
     (*layer)->forward_pass = forward;
     (*layer)->free_layer = freeLayer;
 }
 
-Matrix* forward( linearLayer *layer, Matrix *input)
+Layer* createLayer(char *activation, int in, int out)
+{
+    Layer *layer = malloc(sizeof(Layer));
+    initLinear(&layer, *activation, in, out);
+    return layer;
+}
+
+Matrix* forward( Layer *layer, Matrix *input)
 {
     layer->input->inputData( layer->input, input->data) ;
-    //matrixVector(layer, input);
+    //matrixVector(Layer, input);
     //if(layer->actFunc != NULL) layer->actFunc(layer);
     return layer->output;
 }
@@ -64,7 +80,7 @@ else:
     out = delta.dot(self.weights.T)
 self.weights -= alpha * self.input.T.dot(delta)
 return out
-void backward(struct linearLayer* layer, float* front)
+void backward(struct Layer* layer, float* front)
 {
     float* delta;
     delta = malloc(sizeof(float)*layer->out);
