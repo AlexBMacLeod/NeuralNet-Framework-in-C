@@ -24,9 +24,9 @@ void displayForward();
 
 void displayBackward();
 
-void insertFirst(char *, int, int);
+void insertLayerFirst(char *, int, int);
 
-void insertLast(float *);
+void insertLayerLast(char *, int, int);
 
 struct node* deleteFirst();
 

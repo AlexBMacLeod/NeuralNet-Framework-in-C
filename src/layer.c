@@ -20,12 +20,12 @@ fn(list_for_apply[i]);                                              \
 #define free_all(...) apply_func(void, free, __VA_ARGS__);
 
 
-static void freeLayer( Layer* layer)
+static void freeLayer(Layer* layer)
 {
     layer->weights->freeMem(layer->weights);
-    //freeMatrix(Layer->derivative);
     layer->output->freeMem(layer->output);
     layer->input->freeMem(layer->input);
+    layer->deriv->freeMem(layer->deriv);
     free(layer);
 }
 
@@ -52,6 +52,7 @@ void initLinear( Layer **layer, char *activation, int in, int out)
     }
     //layer->actFunc = funcs->func;
     //layer->derivFunc = funcs->deriv;
+    (*layer)->free_layer = freeLayer;
     (*layer)->forward_pass = forward;
     (*layer)->free_layer = freeLayer;
 }

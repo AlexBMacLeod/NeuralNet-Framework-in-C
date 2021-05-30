@@ -17,6 +17,7 @@ void deleteList()
    while (current != NULL) 
    {
        next = current->next;
+       next->layer->free_layer(next->layer);
        free(current);
        current = next;
    }
@@ -40,7 +41,7 @@ int length() {
 	
    return length;
 }
-
+/*
 //display the list in from first to last
 void displayForward() {
 
@@ -85,9 +86,9 @@ void displayBackward() {
    }
 	
 }
-
+*/
 //insert link at the first location
-void insertFirst(char *activation, int in, int out) {
+void insertLayerFirst(char *activation, int in, int out) {
 
    //create a link
    struct node *link = (struct node*) malloc(sizeof(struct node));
@@ -110,11 +111,12 @@ void insertFirst(char *activation, int in, int out) {
 }
 
 //insert link at the last location
-void insertLast(float data[COLS]) {
+void insertLayerLast(char *activation, int in, int out) {
 
    //create a link
    struct node *link = (struct node*) malloc(sizeof(struct node));
-   memcpy(link->row, data, sizeof(data));
+
+   link->layer = createLayer(activation, in, out);
 	
    if(isEmpty()) {
       //make it the last link
