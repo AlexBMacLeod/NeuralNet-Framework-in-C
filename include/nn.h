@@ -2,6 +2,7 @@
 #ifndef _NN_H
 #define _NN_H
 
+#include <stdbool.h>
 #include "layer.h"
 
 struct node {

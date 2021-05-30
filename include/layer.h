@@ -4,7 +4,6 @@
 #ifndef _LAYER_H
 #define _LAYER_H
 
-#include "activation_functions.h"
 #include "tensor.h"
 
 

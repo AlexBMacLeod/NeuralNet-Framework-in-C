@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#include "../include/activation_functions.h"
+#include "../include/activation_functions.h"
 #include "../include/layer.h"
 //#include "../include/nn.h"
 

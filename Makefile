@@ -1,29 +1,39 @@
-TARGET_EXEC := c_nn
+TARGET_EXEC := cnn
 
 BUILD_DIR := ./build
 SRC_DIRS := ./src
 
 SRCS := $(shell find $(SRC_DIRS) -name *.cpp -or -name *.c)
 
+
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 
+
 DEPS := $(OBJS:.o=.d)
+
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-CFLAGS := $(INC_FLAGS) -MMD -MP `pkg-config --cflags` -g -Wall -O3 `pkg-config --libs` -lm -lgsl -lgslcblas -lz -lsqlite3 -lpthread
-LDFLAGS := `pkg-config --cflags --libs` -lm -lgsl -lgslcblas -lz -lsqlite3 -lpthread -fopenmp -latomic
+
+CPPFLAGS := $(INC_FLAGS) -MMD -MP -g -Wall -O3 -fopenmp -pthread
+LDFLAGS := -lm -lgsl -lgslcblas -lz -lsqlite3 -lpthread -fopenmp -latomic
+
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)
 
+
 $(BUILD_DIR)/%.c.o: %.c
 	mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+
+
 
 .PHONY: clean
 clean:
 	rm -r $(BUILD_DIR)
+
 
 -include $(DEPS)

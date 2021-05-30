@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#include "../include/nn.h"
 
 
 int main(void)
