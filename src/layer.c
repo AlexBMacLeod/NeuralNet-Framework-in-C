@@ -43,6 +43,21 @@ void makeWeights( Matrix* matrix)
         }
     }
 }
+
+void forward( Layer *layer)
+{
+    for(int i=0;i<layer->in;i++)
+    {
+        for(int j=0;j<layer->out;j++)
+        {
+            layer->output->data[j] += layer->input->data[i] * layer->weights->data[i*layer->out+j];
+        }
+    }
+    layer->actFunc(layer);
+    layer->derivFunc(layer);
+    
+}
+
 /*
 void initLinear( Layer **layer, char activation[], int in, int out)
 {
@@ -94,14 +109,6 @@ Layer* createLayer(char activation[], int in, int out)
     layer->free_layer = freeLayer;
     layer->forward_pass = forward;
     return layer;
-}
-
-Matrix* forward( Layer *layer, Matrix *input)
-{
-    layer->input->inputData( layer->input, input->data) ;
-    //matrixVector(Layer, input);
-    //if(layer->actFunc != NULL) layer->actFunc(layer);
-    return layer->output;
 }
 
 /*def backward(self, front):

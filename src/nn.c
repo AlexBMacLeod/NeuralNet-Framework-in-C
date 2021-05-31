@@ -12,7 +12,7 @@ struct node *last = NULL;
 struct node *current = NULL;
 
 
-void deleteList()
+void deleteNetwork()
 {
    /* deref head_ref to get the real head */
    //struct node* current;
@@ -138,40 +138,22 @@ void insertLayerLast(char activation[], int in, int out) {
    last = link;
 }
 
-//delete first item
-struct node* deleteFirst() {
 
-   //save reference to first link
-   struct node *tempLink = head;
-	
-   //if only one link
-   if(head->next == NULL){
-      last = NULL;
-   } else {
-      head->next->prev = NULL;
+float* network_forward(float* in)
+{
+   struct node* next;
+
+   current = head;
+   memcpy(current->layer->input->data, in, current->layer->in * sizeof(float));
+   while (current != NULL) 
+   {
+       next = current->next;
+       current->layer->forward_pass(current->layer);
    }
-	
-   head = head->next;
-   //return the deleted link
-   return tempLink;
+   
+
+   return last->layer->output->data;
 }
 
-//delete link at the last location
 
-struct node* deleteLast() {
-   //save reference to last link
-   struct node *tempLink = last;
-	
-   //if only one link
-   if(head->next == NULL) {
-      head = NULL;
-   } else {
-      last->prev->next = NULL;
-   }
-	
-   last = last->prev;
-	
-   //return the deleted link
-   return tempLink;
-}
-
+float* backward(float*)

@@ -27,10 +27,14 @@ void insertLayerFirst(char[], int, int);
 
 void insertLayerLast(char[], int, int);
 
+float* network_forward(float*);
+
+float* backward(float*);
+
 struct node* deleteFirst();
 
 struct node* deleteLast();
 
-void deleteList();
+void deleteNetwork();
 
 #endif //_NN_H
