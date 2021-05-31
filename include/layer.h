@@ -21,7 +21,7 @@ typedef struct Layer{
     int out;
     void (*actFunc)(struct Layer*);
     void (*derivFunc)(struct Layer*);
-    Matrix* (*forward_pass)(struct Layer*);
+    void (*forward_pass)(struct Layer*);
     //void (*backward_pass)(struct layer*, float*);
     void (*free_layer)(struct Layer*);
 } Layer;

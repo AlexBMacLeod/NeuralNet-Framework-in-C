@@ -25,16 +25,16 @@ void displayBackward();
 
 void insertLayerFirst(char[], int, int);
 
-void insertLayerLast(char[], int, int);
+void net_add_layer(char[], int, int);
 
-float* network_forward(float*);
+void net_forward(float*, float*);
 
-float* backward(float*);
+void net_backward(float*);
 
 struct node* deleteFirst();
 
 struct node* deleteLast();
 
-void deleteNetwork();
+void net_delete();
 
 #endif //_NN_H

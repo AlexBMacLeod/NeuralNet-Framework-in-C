@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <unistd.h>
 
 
 
@@ -12,7 +12,7 @@ struct node *last = NULL;
 struct node *current = NULL;
 
 
-void deleteNetwork()
+void net_delete()
 {
    /* deref head_ref to get the real head */
    //struct node* current;
@@ -22,6 +22,7 @@ void deleteNetwork()
    while (current != NULL) 
    {
        next = current->next;
+       //if(next==NULL) current->layer->input->freeMem(current->layer->input);
        current->layer->free_layer(current->layer);
        free(current);
        current = next;
@@ -116,7 +117,7 @@ void insertLayerFirst(char activation[], int in, int out) {
 }
 
 //insert link at the last location
-void insertLayerLast(char activation[], int in, int out) {
+void net_add_layer(char activation[], int in, int out) {
 
    //create a link
    struct node *link = (struct node*) malloc(sizeof(struct node));
@@ -125,11 +126,14 @@ void insertLayerLast(char activation[], int in, int out) {
 	
    if(isEmpty()) {
       //make it the last link
+      link->layer->input = createMatrix(in, 1);
+      head = link;
       last = link;
    } else {
       //make link a new last link
       last->layer->nextDelta = link->layer->delta;
       last->layer->nextWeights = link->layer->weights;
+      link->layer->input = last->layer->output;
       last->next = link;     
       
       //mark old last node as prev of new link
@@ -141,7 +145,7 @@ void insertLayerLast(char activation[], int in, int out) {
 }
 
 
-float* network_forward(float* in)
+void net_forward(float* in, float *out)
 {
    struct node* next;
 
@@ -149,13 +153,15 @@ float* network_forward(float* in)
    memcpy(current->layer->input->data, in, current->layer->in * sizeof(float));
    while (current != NULL) 
    {
-       next = current->next;
-       current->layer->forward_pass(current->layer);
+      current->layer->forward_pass(current->layer);
+      if(current->next==NULL) memcpy(out, current->layer->output->data, sizeof(float)*current->layer->out);
+      current = current->next;
    }
    
-
-   return last->layer->output->data;
 }
 
 
-float* backward(float*)
+void net_backward(float* in)
+{
+   sleep(0);
+}
