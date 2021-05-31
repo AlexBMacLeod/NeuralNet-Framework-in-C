@@ -11,10 +11,12 @@
 
 typedef struct Layer{
     Matrix *weights;
-    //struct Matrix *derivative;
     Matrix *output;
     Matrix *deriv;
     Matrix *input;
+    Matrix *delta;
+    Matrix *nextDelta;
+    Matrix *nextWeights;
     int in;
     int out;
     void (*actFunc)(struct Layer*);

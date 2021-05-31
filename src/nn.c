@@ -128,6 +128,8 @@ void insertLayerLast(char activation[], int in, int out) {
       last = link;
    } else {
       //make link a new last link
+      last->layer->nextDelta = link->layer->delta;
+      last->layer->nextWeights = link->layer->weights;
       last->next = link;     
       
       //mark old last node as prev of new link

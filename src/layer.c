@@ -29,6 +29,7 @@ void freeLayer(Layer* layer)
     layer->output->freeMem(layer->output);
     layer->input->freeMem(layer->input);
     layer->deriv->freeMem(layer->deriv);
+    layer->delta->freeMem(layer->delta);
     free(layer);
 }
 
@@ -92,6 +93,9 @@ Layer* createLayer(char activation[], int in, int out)
     layer->weights = createMatrix( in, out);
     layer->output = createMatrix( out, 1);
     layer->input = createMatrix( in, 1);
+    layer->delta = createMatrix(out, 1);
+    layer->nextDelta = NULL;
+    layer->nextWeights = NULL;
 
     layer->in = in;
     layer->out = out;
