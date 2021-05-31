@@ -43,11 +43,11 @@ void makeWeights( Matrix* matrix)
         }
     }
 }
-
+/*
 void initLinear( Layer **layer, char activation[], int in, int out)
 {
     
-    //layer->derivative = createMatrix( in, out);
+    (*layer)->deriv = createMatrix( out, 1);
     (*layer)->weights = createMatrix( in, out);
     (*layer)->output = createMatrix( out, 1);
     (*layer)->input = createMatrix( in, 1);
@@ -67,13 +67,32 @@ void initLinear( Layer **layer, char activation[], int in, int out)
     //layer->derivFunc = funcs->deriv;
     (*layer)->free_layer = freeLayer;
     (*layer)->forward_pass = forward;
-    (*layer)->free_layer = freeLayer;
 }
-
+*/
 Layer* createLayer(char activation[], int in, int out)
 {
-    Layer *layer = malloc(sizeof(Layer));
-    initLinear(&layer, activation, in, out);
+    Layer *layer = (Layer*)malloc(sizeof(Layer));
+    //initLinear(&layer, activation, in, out);
+    layer->deriv = createMatrix( out, 1);
+    layer->weights = createMatrix( in, out);
+    layer->output = createMatrix( out, 1);
+    layer->input = createMatrix( in, 1);
+
+    layer->in = in;
+    layer->out = out;
+    makeWeights( layer->weights);
+    if(strcmp(activation, "relu") == 0)
+    {
+        layer->actFunc = relu;
+        layer->derivFunc = relu_deriv;
+    }else{
+        layer->actFunc = none;
+        layer->derivFunc = none;
+    }
+    //layer->actFunc = funcs->func;
+    //layer->derivFunc = funcs->deriv;
+    layer->free_layer = freeLayer;
+    layer->forward_pass = forward;
     return layer;
 }
 

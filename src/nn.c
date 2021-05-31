@@ -15,14 +15,14 @@ struct node *current = NULL;
 void deleteList()
 {
    /* deref head_ref to get the real head */
-   struct node* current;
+   //struct node* current;
    struct node* next;
 
    current = head;
    while (current != NULL) 
    {
        next = current->next;
-       next->layer->free_layer(next->layer);
+       current->layer->free_layer(current->layer);
        free(current);
        current = next;
    }

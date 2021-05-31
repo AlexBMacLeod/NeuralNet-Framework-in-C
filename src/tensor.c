@@ -28,7 +28,7 @@ static void input(Matrix* matrix, float* inMatrix)
 
 Matrix* createMatrix( int x, int y)
 {
-    Matrix* matrix = malloc(sizeof(Matrix));
+    Matrix* matrix = (Matrix*)malloc(sizeof(Matrix));
     matrix->shape.x = x;
     matrix->shape.y = y;
     matrix->giveMem = reallocateMem;
