@@ -5,6 +5,7 @@
 #define _LAYER_H
 
 #include "tensor.h"
+//#include "activation_functions.h"
 
 
 
@@ -37,12 +38,14 @@ The backward pass would then be:
 layer.backward_pass(&layer, delta);
 */
 
-static void freeLayer(Layer*);
+void makeWeights( Matrix*);
+
+void freeLayer(Layer*);
 
 //void initLinear( layer*, int, int, activation *funcs);
-void initLayer( Layer**, char*, int, int);
+void initLayer( Layer**, char[], int, int);
 
-//Layer* createLayer(char *, int, int);
+Layer* createLayer(char[], int, int);
 
 Matrix *forward( Layer*, Matrix*);
 //

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 
 #include "../include/activation_functions.h"
 
@@ -36,4 +37,9 @@ void relu_deriv(Layer* layer)
             }
         }
     }
+}
+
+void none(Layer* layer)
+{
+    sleep(0);
 }

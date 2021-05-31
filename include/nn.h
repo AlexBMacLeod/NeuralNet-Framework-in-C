@@ -11,11 +11,9 @@ struct node {
     Layer *layer;
 };
 
-extern struct node *head = NULL;
-
-extern struct node *last = NULL;
-
-extern struct node *current = NULL;
+extern struct node *head;
+extern struct node *last;
+extern struct node *current;
 
 bool isEmpty();
 
@@ -25,9 +23,9 @@ void displayForward();
 
 void displayBackward();
 
-void insertLayerFirst(char *, int, int);
+void insertLayerFirst(char[], int, int);
 
-void insertLayerLast(char *, int, int);
+void insertLayerLast(char[], int, int);
 
 struct node* deleteFirst();
 

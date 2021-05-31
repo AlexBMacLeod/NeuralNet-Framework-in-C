@@ -13,8 +13,6 @@ typedef struct Matrix{
 }Matrix;
 
 Matrix* createMatrix( int x, int y);
-static void input(Matrix*, float*);
-static void reallocateMem( Matrix*, struct Shape);
-static void freeMatrix( Matrix*);
+
 
 #endif //TENSOR_H

@@ -7,6 +7,11 @@
 
 #include "../include/nn.h"
 
+struct node *head = NULL;
+struct node *last = NULL;
+struct node *current = NULL;
+
+
 void deleteList()
 {
    /* deref head_ref to get the real head */
@@ -88,7 +93,7 @@ void displayBackward() {
 }
 */
 //insert link at the first location
-void insertLayerFirst(char *activation, int in, int out) {
+void insertLayerFirst(char activation[], int in, int out) {
 
    //create a link
    struct node *link = (struct node*) malloc(sizeof(struct node));
@@ -111,7 +116,7 @@ void insertLayerFirst(char *activation, int in, int out) {
 }
 
 //insert link at the last location
-void insertLayerLast(char *activation, int in, int out) {
+void insertLayerLast(char activation[], int in, int out) {
 
    //create a link
    struct node *link = (struct node*) malloc(sizeof(struct node));

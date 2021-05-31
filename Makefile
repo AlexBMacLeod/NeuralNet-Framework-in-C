@@ -18,7 +18,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 
 CPPFLAGS := $(INC_FLAGS) -MMD -MP -g -Wall -O3 -fopenmp -pthread
-LDFLAGS := -lm -lgsl -lgslcblas -lz -lsqlite3 -lpthread -fopenmp -latomic
+LDFLAGS := -lm -lz -fopenmp -latomic
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 	$(CC) $(OBJS) -o $@ $(LDFLAGS)

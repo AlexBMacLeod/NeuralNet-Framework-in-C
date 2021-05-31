@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <time.h>
+#include <string.h>
 
 #include "../include/activation_functions.h"
 #include "../include/layer.h"
@@ -20,7 +23,7 @@ fn(list_for_apply[i]);                                              \
 #define free_all(...) apply_func(void, free, __VA_ARGS__);
 
 
-static void freeLayer(Layer* layer)
+void freeLayer(Layer* layer)
 {
     layer->weights->freeMem(layer->weights);
     layer->output->freeMem(layer->output);
@@ -29,7 +32,19 @@ static void freeLayer(Layer* layer)
     free(layer);
 }
 
-void initLinear( Layer **layer, char *activation, int in, int out)
+void makeWeights( Matrix* matrix)
+{
+    srand(time(NULL));
+    for(int i = 0; i < matrix->shape.y; i++)
+    {
+        for(int j = 0; j < matrix->shape.x; j++)
+        {
+            matrix->data[i*matrix->shape.x+j] = (((float)rand()/(float)(RAND_MAX)));
+        }
+    }
+}
+
+void initLinear( Layer **layer, char activation[], int in, int out)
 {
     
     //layer->derivative = createMatrix( in, out);
@@ -40,15 +55,13 @@ void initLinear( Layer **layer, char *activation, int in, int out)
     (*layer)->in = in;
     (*layer)->out = out;
     makeWeights( (*layer)->weights);
-    switch(*activation)
+    if(strcmp(activation, "relu") == 0)
     {
-        case 'relu':
-            (*layer)->actFunc = relu;
-            (*layer)->derivFunc = relu_deriv;
-            break;
-        default:
-            (*layer)->actFunc = none;
-            (*layer)->derivFunc = none;
+        (*layer)->actFunc = relu;
+        (*layer)->derivFunc = relu_deriv;
+    }else{
+        (*layer)->actFunc = none;
+        (*layer)->derivFunc = none;
     }
     //layer->actFunc = funcs->func;
     //layer->derivFunc = funcs->deriv;
@@ -57,10 +70,10 @@ void initLinear( Layer **layer, char *activation, int in, int out)
     (*layer)->free_layer = freeLayer;
 }
 
-Layer* createLayer(char *activation, int in, int out)
+Layer* createLayer(char activation[], int in, int out)
 {
     Layer *layer = malloc(sizeof(Layer));
-    initLinear(&layer, *activation, in, out);
+    initLinear(&layer, activation, in, out);
     return layer;
 }
 

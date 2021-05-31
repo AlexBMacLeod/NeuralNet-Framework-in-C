@@ -4,6 +4,10 @@
 
 #include "../include/tensor.h"
 
+static void input(Matrix*, float*);
+static void reallocateMem( Matrix*, struct Shape);
+static void freeMatrix( Matrix*);
+
 static void reallocateMem(Matrix *matrix, struct Shape shape)
 {
     //matrix->shape.x = x;
