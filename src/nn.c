@@ -19,6 +19,9 @@ void net_delete()
    struct node* next;
 
    current = head;
+
+   current->layer->input->freeMem(current->layer->input);
+
    while (current != NULL) 
    {
        next = current->next;
@@ -150,11 +153,12 @@ void net_forward(float* in, float *out)
    struct node* next;
 
    current = head;
-   memcpy(current->layer->input->data, in, current->layer->in * sizeof(float));
+   //memmove(current->layer->input->data, in, sizeof(float)*5);
+   //current->layer->input->data = in;
    while (current != NULL) 
    {
       current->layer->forward_pass(current->layer);
-      if(current->next==NULL) memcpy(out, current->layer->output->data, sizeof(float)*current->layer->out);
+      //if(current->next==NULL) memmove(out, current->layer->output->data, sizeof(float)*5);
       current = current->next;
    }
    

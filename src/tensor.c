@@ -34,7 +34,8 @@ Matrix* createMatrix( int x, int y)
     matrix->giveMem = reallocateMem;
     matrix->freeMem = freeMatrix;
     matrix->inputData = input;
-    matrix->data = malloc(sizeof(float)*matrix->shape.x*matrix->shape.y);
+    //matrix->data = malloc(sizeof(float)*matrix->shape.x*matrix->shape.y);
+    matrix->data = calloc(matrix->shape.x*matrix->shape.y, sizeof(float));
     return matrix;
 }
 
