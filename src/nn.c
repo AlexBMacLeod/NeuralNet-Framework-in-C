@@ -157,13 +157,13 @@ void nn_forward(float* in, float *out)
 {
    //struct node* next;
 
-   current = head;
+   current = last;
    memmove(current->layer->input->data, in, sizeof(float)*5);
    //current->layer->input->data = in;
    while (current != NULL) 
    {
       current->layer->forward_pass(current->layer);
-      //if(current->next==NULL) memmove(out, current->layer->output->data, sizeof(float)*5);
+      if(current->next==NULL) memmove(out, current->layer->output->data, sizeof(float)*5);
       current = current->next;
    }
    

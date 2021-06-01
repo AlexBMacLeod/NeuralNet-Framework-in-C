@@ -13,6 +13,8 @@
 #include "../include/layer.h"
 //#include "../include/nn.h"
 
+#define ALPHA .02
+
 
 #define Fn_apply(type, fn, ...) {                                   \
 void *stopper_for_apply = (int[]){0};                               \
@@ -126,29 +128,28 @@ else:
     out = delta.dot(self.weights.T)
 self.weights -= alpha * self.input.T.dot(delta)
 return out
+*/
 void backward(struct Layer* layer, float* front)
 {
-    float* delta;
-    delta = malloc(sizeof(float)*layer->out);
-
-    if(layer->actFunc != NULL)
-    {
-        relu_deriv(layer);
-        matrixVector( layer->output, front, delta, layer->in, layer->out)
-        realloc(front, sizeof(float)*layer->in);
-        float* transpose_weights;
-        transpose_weights = malloc(sizeof(float)*layer->out*layer->in);
-        transpose( layer->weights, transpose_weights, layer->in, layer->out);
-        matrixVector( delta, transpose_weights, front);
-        free(transpose_weights);
-    } else{
-        *delta = layer->output - *front;
-        float* transpose_weights;
-        transpose_weights = malloc(sizeof(float)*layer->out*layer->in);
-        transpose( layer->weights, transpose_weights, layer->in, layer->out);
-        matrixVector( delta, transpose_weights, front);
-        free(transpose_weights);
-
+    if(layer->nextDelta==NULL)
+    {   
+        if(layer->out==1)
+        {
+            float tmpDelta = layer->output->data - front;
+            memmove(layer->delta->data, &tmpDelta, sizeof(float));
+        }else{
+        for(int i=0;i<layer->out;i++) layer->delta->data[i] = layer->output->data[i] - front[i];
+        }
+    }else{
+        int col = sizeof(layer->nextWeights->data) / sizeof(layer->nextWeights->data[0]) / layer->out;
+        for(int i=0;i<layer->out;i++)
+        {
+            for(int j=0;j<col;j++)
+            {
+                layer->delta->data[i] += layer->nextDelta->data[j] * layer->nextWeights->data[i*col+j];
+            }
+        }
+        for(int i=0;i<layer->out;i++) layer->delta->data[i] = layer->delta->data[i] * layer->deriv->data[i];
     }
-
-}*/
+    
+}
