@@ -12,7 +12,7 @@ struct node *last = NULL;
 struct node *current = NULL;
 
 
-void net_delete()
+void nn_delete()
 {
    /* deref head_ref to get the real head */
    //struct node* current;
@@ -20,12 +20,12 @@ void net_delete()
 
    current = head;
 
-   current->layer->input->freeMem(current->layer->input);
+   //last->layer->input->freeMem(current->layer->input);
 
    while (current != NULL) 
    {
        next = current->next;
-       //if(next==NULL) current->layer->input->freeMem(current->layer->input);
+       if(next==NULL) current->layer->input->freeMem(current->layer->input);
        current->layer->free_layer(current->layer);
        free(current);
        current = next;
@@ -97,7 +97,7 @@ void displayBackward() {
 }
 */
 //insert link at the first location
-void insertLayerFirst(char activation[], int in, int out) {
+void nn_linear(char activation[], int in, int out) {
 
    //create a link
    struct node *link = (struct node*) malloc(sizeof(struct node));
@@ -106,9 +106,14 @@ void insertLayerFirst(char activation[], int in, int out) {
 	
    if(isEmpty()) {
       //make it the last link
+      link->layer->input = createMatrix(in, 1);
       last = link;
    } else {
       //update first prev link
+
+      link->layer->input = head->layer->output;
+      head->layer->nextDelta = link->layer->delta;
+      head->layer->nextWeights = link->layer->weights;
       head->prev = link;
    }
 
@@ -129,14 +134,14 @@ void net_add_layer(char activation[], int in, int out) {
 	
    if(isEmpty()) {
       //make it the last link
-      link->layer->input = createMatrix(in, 1);
+      //link->layer->input = createMatrix(in, 1);
       head = link;
-      last = link;
+      //last = link;
    } else {
       //make link a new last link
-      last->layer->nextDelta = link->layer->delta;
-      last->layer->nextWeights = link->layer->weights;
-      link->layer->input = last->layer->output;
+      //last->layer->nextDelta = link->layer->delta;
+      //last->layer->nextWeights = link->layer->weights;
+      //link->layer->input = last->layer->output;
       last->next = link;     
       
       //mark old last node as prev of new link
@@ -148,12 +153,12 @@ void net_add_layer(char activation[], int in, int out) {
 }
 
 
-void net_forward(float* in, float *out)
+void nn_forward(float* in, float *out)
 {
-   struct node* next;
+   //struct node* next;
 
    current = head;
-   //memmove(current->layer->input->data, in, sizeof(float)*5);
+   memmove(current->layer->input->data, in, sizeof(float)*5);
    //current->layer->input->data = in;
    while (current != NULL) 
    {
@@ -165,7 +170,7 @@ void net_forward(float* in, float *out)
 }
 
 
-void net_backward(float* in)
+void nn_backward(float* in)
 {
    sleep(0);
 }

@@ -23,18 +23,18 @@ void displayForward();
 
 void displayBackward();
 
-void insertLayerFirst(char[], int, int);
+void nn_linear(char[], int, int);
 
 void net_add_layer(char[], int, int);
 
-void net_forward(float*, float*);
+void nn_forward(float*, float*);
 
-void net_backward(float*);
+void nn_backward(float*);
 
 struct node* deleteFirst();
 
 struct node* deleteLast();
 
-void net_delete();
+void nn_delete();
 
 #endif //_NN_H

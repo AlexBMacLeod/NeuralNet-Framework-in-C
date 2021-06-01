@@ -7,6 +7,7 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../include/activation_functions.h"
 #include "../include/layer.h"
@@ -47,16 +48,16 @@ void makeWeights( Matrix* matrix)
 
 void forward( Layer *layer)
 {
-    for(int i=0;i<layer->in;i++)
+    for(int i=0;i<layer->out;i++)
     {
-        for(int j=0;j<layer->out;j++)
+        for(int j=0;j<layer->in;j++)
         {
-            layer->output->data[j] += layer->input->data[i] * layer->weights->data[i*layer->out+j];
+            layer->output->data[i] += layer->input->data[j] * layer->weights->data[i*layer->in+j];
         }
     }
     layer->actFunc(layer);
     layer->derivFunc(layer);
-    
+
 }
 
 /*
