@@ -50,6 +50,7 @@ void makeWeights( Matrix* matrix)
 
 void forward( Layer *layer)
 {
+    memset(layer->output->data, 0, layer->out*sizeof(float));
     for(int i=0;i<layer->out;i++)
     {
         for(int j=0;j<layer->in;j++)

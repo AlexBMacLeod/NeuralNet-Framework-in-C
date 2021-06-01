@@ -153,17 +153,18 @@ void net_add_layer(char activation[], int in, int out) {
 }
 
 
-void nn_forward(float* in, float *out)
+void nn_forward(float* input, float *out)
 {
    //struct node* next;
 
    current = last;
-   memmove(current->layer->input->data, in, sizeof(float)*5);
+   memmove(current->layer->input->data, input, sizeof(float)*current->layer->in);
    //current->layer->input->data = in;
    while (current != NULL) 
    {
       current->layer->forward_pass(current->layer);
-      if(current->next==NULL) memmove(out, current->layer->output->data, sizeof(float)*5);
+      //if(current->next==NULL) memmove(out, current->layer->output->data, sizeof(float)*current->layer->out);
+      if(current->next==NULL) out = current->layer->output->data;
       current = current->next;
    }
    
