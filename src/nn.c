@@ -172,5 +172,9 @@ void nn_forward(float* in, float *out)
 
 void nn_backward(float* in)
 {
-   sleep(0);
+   current = head;
+   while(current!=NULL)
+   {
+      current->layer->backward_pass(current->layer, in);
+   }
 }

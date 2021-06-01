@@ -22,7 +22,7 @@ typedef struct Layer{
     void (*actFunc)(struct Layer*);
     void (*derivFunc)(struct Layer*);
     void (*forward_pass)(struct Layer*);
-    //void (*backward_pass)(struct layer*, float*);
+    void (*backward_pass)(struct Layer*, float*);
     void (*free_layer)(struct Layer*);
 } Layer;
 
@@ -51,6 +51,6 @@ Layer* createLayer(char[], int, int);
 
 void forward( Layer*);
 //
-//void backward( layer*, float*);
+void backward( Layer*, float*);
 
 #endif //_LAYER_H

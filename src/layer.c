@@ -116,6 +116,7 @@ Layer* createLayer(char activation[], int in, int out)
     //layer->derivFunc = funcs->deriv;
     layer->free_layer = freeLayer;
     layer->forward_pass = forward;
+    layer->backward_pass = backward;
     return layer;
 }
 
@@ -151,5 +152,11 @@ void backward(struct Layer* layer, float* front)
         }
         for(int i=0;i<layer->out;i++) layer->delta->data[i] = layer->delta->data[i] * layer->deriv->data[i];
     }
-    
+    for(int i=0; i<layer->in;i++)
+    {
+        for(int j=0; j<layer->out;j++)
+        {
+            layer->weights->data[i*layer->out+j] -= ALPHA * layer->input->data[i] * layer->output->data[j]; 
+        }
+    }
 }
