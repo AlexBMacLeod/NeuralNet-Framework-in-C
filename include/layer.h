@@ -17,6 +17,7 @@ typedef struct Layer{
     Matrix *delta;
     Matrix *nextDelta;
     Matrix *nextWeights;
+    int nextOut;
     int in;
     int out;
     void (*actFunc)(struct Layer*);

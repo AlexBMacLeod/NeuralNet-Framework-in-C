@@ -1,181 +1,94 @@
+/* Doubly Linked List implementation */
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
-
-
+#include <string.h>
 
 #include "../include/nn.h"
 
-struct node *head = NULL;
-struct node *last = NULL;
-struct node *current = NULL;
+struct Node* head; // global variable - pointer to head node.
 
-
-void nn_delete()
-{
-   /* deref head_ref to get the real head */
-   //struct node* current;
-   struct node* next;
-
-   current = head;
-
-   //last->layer->input->freeMem(current->layer->input);
-
-   while (current != NULL) 
-   {
-       next = current->next;
-       if(next==NULL) current->layer->input->freeMem(current->layer->input);
-       current->layer->free_layer(current->layer);
-       free(current);
-       current = next;
-   }
-   
-   /* deref head_ref to affect the real head back
-      in the caller. */
-   head = NULL;
+//Creates a new Node and returns pointer to it. 
+struct Node* GetNewNode(char activation[], int in, int out) {
+	struct Node* newNode
+		= (struct Node*)malloc(sizeof(struct Node));
+	newNode->layer = createLayer(activation, in, out);
+	newNode->prev = NULL;
+	newNode->next = NULL;
+	return newNode;
+}
+//So then head is the first
+//Inserts a Node at head of doubly linked list
+void InsertAtHead(char activation[], int in, int out) {
+	struct Node* newNode = GetNewNode(activation, in, out);
+	if(head == NULL) {
+        newNode->layer->input = createMatrix(in, 1);
+		head = newNode;
+		return;
+	}
+	head->prev = newNode;
+	newNode->next = head; 
+    newNode->layer->input = head->layer->output;
+    head->layer->nextDelta = newNode->layer->delta;
+    head->layer->nextWeights = newNode->layer->weights;
+	head->layer->nextOut = newNode->layer->out;
+	head = newNode;
 }
 
-bool isEmpty() {
-   return head == NULL;
+//Inserts a Node at tail of Doubly linked list
+void InsertAtTail(char activation[], int in, int out) {
+	struct Node* temp = head;
+	struct Node* newNode = GetNewNode(activation, in, out);
+	if(head == NULL) {
+		head = newNode;
+		return;
+	}
+	while(temp->next != NULL) temp = temp->next; // Go To last Node
+	temp->next = newNode;
+	newNode->prev = temp;
 }
 
-int length() {
-   int length = 0;
-   struct node *current;
-	
-   for(current = head; current != NULL; current = current->next){
-      length++;
-   }
-	
-   return length;
-}
-/*
-//display the list in from first to last
-void displayForward() {
-
-   //start from the beginning
-   struct node *ptr = head;
-	
-   //navigate till the end of the list
-   printf("\n[ ");
-	
-   while(ptr != NULL) 
-   {
-        for(int i=0;i<COLS;i++)
-        {         
-            printf("(%d,%d) ",ptr->key,ptr->data);
-        }
-        ptr = ptr->next;
-   }
-	
-   printf(" ]");
-}
-
-//display the list from last to first
-void displayBackward() {
-
-   //start from the last
-   struct node *ptr = last;
-	
-   //navigate till the start of the list
-   printf("\n[ ");
-	
-   while(ptr != NULL) {    
-	
-      //print data
-        for(int i=0;i<COLS;i++)  
-        {         
-            printf("(%d,%d) ",ptr->key,ptr->data);
-        }
-		
-        //move to next item
-        ptr = ptr ->prev;
-      
-   }
-	
-}
-*/
-//insert link at the first location
-void nn_linear(char activation[], int in, int out) {
-
-   //create a link
-   struct node *link = (struct node*) malloc(sizeof(struct node));
-
-   link->layer = createLayer(activation, in, out);
-	
-   if(isEmpty()) {
-      //make it the last link
-      link->layer->input = createMatrix(in, 1);
-      last = link;
-   } else {
-      //update first prev link
-
-      link->layer->input = head->layer->output;
-      head->layer->nextDelta = link->layer->delta;
-      head->layer->nextWeights = link->layer->weights;
-      head->prev = link;
-   }
-
-   //point it to old first link
-   link->next = head;
-	
-   //point first to new first link
-   head = link;
-}
-
-//insert link at the last location
-void net_add_layer(char activation[], int in, int out) {
-
-   //create a link
-   struct node *link = (struct node*) malloc(sizeof(struct node));
-
-   link->layer = createLayer(activation, in, out);
-	
-   if(isEmpty()) {
-      //make it the last link
-      //link->layer->input = createMatrix(in, 1);
-      head = link;
-      //last = link;
-   } else {
-      //make link a new last link
-      //last->layer->nextDelta = link->layer->delta;
-      //last->layer->nextWeights = link->layer->weights;
-      //link->layer->input = last->layer->output;
-      last->next = link;     
-      
-      //mark old last node as prev of new link
-      link->prev = last;
-   }
-
-   //point last to new last node
-   last = link;
+//Prints all the elements in linked list in forward traversal order
+void Backward(float *y) {
+	struct Node* temp = head;
+	while(temp != NULL) {
+		temp->layer->backward_pass(temp->layer, y);
+		temp = temp->next;
+	}
 }
 
 
-void nn_forward(float* input, float *out)
-{
-   //struct node* next;
 
-   current = last;
-   memmove(current->layer->input->data, input, sizeof(float)*current->layer->in);
-   //current->layer->input->data = in;
-   while (current != NULL) 
-   {
-      current->layer->forward_pass(current->layer);
-      //if(current->next==NULL) memmove(out, current->layer->output->data, sizeof(float)*current->layer->out);
-      if(current->next==NULL) out = current->layer->output->data;
-      current = current->next;
-   }
-   
+void Forward(float *input, float *output) {
+	struct Node* temp = head;
+	if(temp == NULL) return; // empty list, exit
+	// Going to last Node
+	while(temp->next != NULL) {
+		temp = temp->next;
+	}
+	// Traversing backward using prev pointer
+	//memmove(temp->layer->input, input, sizeof(float)*temp->layer->in);
+	for(int i=0; i<temp->layer->in; i++) temp->layer->input->data[i] = input[i];
+	while(temp != NULL) {
+        temp->layer->forward_pass(temp->layer);
+        if(temp->prev==NULL) *output = *(temp->layer->output->data);
+		temp = temp->prev;
+	}
 }
 
-
-void nn_backward(float* in)
-{
-   current = head;
-   while(current!=NULL)
-   {
-      current->layer->backward_pass(current->layer, in);
-   }
+void Delete() {
+    	struct Node* temp = head;
+        struct Node* prev = temp;
+	if(temp == NULL) return; // empty list, exit
+	// Going to last Node
+	while(temp->next != NULL) {
+		temp = temp->next;
+	}
+	temp->layer->input->freeMem(temp->layer->input);
+	while(temp != NULL) {
+		prev = temp->prev;
+        //if(prev==NULL) temp->layer->input->freeMem(temp->layer->input);
+        temp->layer->free_layer(temp->layer);
+        free(temp);
+        temp = prev;
+	}
 }

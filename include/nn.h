@@ -1,40 +1,30 @@
-
 #ifndef _NN_H
 #define _NN_H
 
-#include <stdbool.h>
 #include "layer.h"
 
-struct node {
-    struct node* next; // Pointer to next node in DLL
-    struct node* prev; // Pointer to previous node in DLL
+struct Node  {
+	struct Node* next;
+	struct Node* prev;
     Layer *layer;
 };
 
-extern struct node *head;
-extern struct node *last;
-extern struct node *current;
+extern struct Node* head; // global variable - pointer to head node.
 
-bool isEmpty();
+//Creates a new Node and returns pointer to it. 
+struct Node* GetNewNode(char[], int, int);
 
-int length();
+//Inserts a Node at head of doubly linked list
+void InsertAtHead(char[], int, int);
 
-void displayForward();
+//Inserts a Node at tail of Doubly linked list
+void InsertAtTail(char[], int, int);
 
-void displayBackward();
 
-void nn_linear(char[], int, int);
+void Forward(float*, float*);
 
-void net_add_layer(char[], int, int);
+void Delete();
 
-void nn_forward(float*, float*);
-
-void nn_backward(float*);
-
-struct node* deleteFirst();
-
-struct node* deleteLast();
-
-void nn_delete();
+void Backward(float*);
 
 #endif //_NN_H
