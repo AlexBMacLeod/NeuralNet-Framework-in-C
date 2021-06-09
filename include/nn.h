@@ -9,6 +9,13 @@ struct Node  {
     Layer *layer;
 };
 
+typedef struct NeuralNet{
+	void (*add_linear_layer)(char[], int, int);
+	void (*forward_pass)(float*, float*);
+	void (*backward_pass)(float*);
+	void (*clean_up)();
+}NeuralNet;
+
 extern struct Node* head; // global variable - pointer to head node.
 
 //Creates a new Node and returns pointer to it. 
@@ -20,6 +27,7 @@ void InsertAtHead(char[], int, int);
 //Inserts a Node at tail of Doubly linked list
 void InsertAtTail(char[], int, int);
 
+NeuralNet createNetwork();
 
 void Forward(float*, float*);
 

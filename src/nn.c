@@ -126,3 +126,13 @@ void Delete() {
         temp = prev;
 	}
 }
+
+NeuralNet createNetwork(void)
+{
+	NeuralNet nn;
+	nn.add_linear_layer = InsertAtHead;
+	nn.backward_pass = Backward;
+	nn.forward_pass = Forward;
+	nn.clean_up = Delete;
+	return nn;
+}
