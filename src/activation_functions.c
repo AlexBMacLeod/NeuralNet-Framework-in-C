@@ -2,23 +2,6 @@
 #include <unistd.h>
 
 #include "../include/activation_functions.h"
-/*
-void relu(Layer* layer)
-{
-    int col = layer->output->shape.x;
-    int row = layer->output->shape.y;
-
-    for(int i=0; i<row; i++)
-    {
-        for(int j=0; j<col; j++)
-        {
-            if(layer->output->data[i*col+j]<0)
-            {
-                layer->output->data[i*col+j] = 0;
-            }
-        }
-    }
-}*/
 
 void relu(Layer* layer)
 {
@@ -26,7 +9,7 @@ void relu(Layer* layer)
     {
         if(layer->output->data[i]<0)
         {
-            layer->output->data[i] = 0;
+            layer->output->data[i] = 0.0f;
         }
     }
 }
@@ -37,9 +20,9 @@ void relu_deriv(Layer* layer)
     {
         if(layer->output->data[i]>0)
         {
-            layer->deriv->data[i] = 1;
+            layer->deriv->data[i] = 1.0f;
         }else{
-            layer->deriv->data[i] = 0;
+            layer->deriv->data[i] = 0.0f;
         }
     }
 }

@@ -11,9 +11,8 @@
 
 #include "../include/activation_functions.h"
 #include "../include/layer.h"
+#include "../include/mmath.h"
 //#include "../include/nn.h"
-
-#define ALPHA .2
 
 
 #define Fn_apply(type, fn, ...) {                                   \
@@ -30,7 +29,6 @@ void freeLayer(Layer* layer)
 {
     layer->weights->freeMem(layer->weights);
     layer->output->freeMem(layer->output);
-    //layer->input->freeMem(layer->input);
     layer->deriv->freeMem(layer->deriv);
     layer->delta->freeMem(layer->delta);
     free(layer);
@@ -39,25 +37,19 @@ void freeLayer(Layer* layer)
 void makeWeights( Matrix* matrix)
 {
     srand(time(NULL));
-    for(int i = 0; i < matrix->shape.y; i++)
+    for(int i = 0; i < matrix->shape.x; i++)
     {
-        for(int j = 0; j < matrix->shape.x; j++)
+        for(int j = 0; j < matrix->shape.y; j++)
         {
-            matrix->data[i*matrix->shape.x+j] = (((float)rand()/(float)(RAND_MAX)));
+            matrix->data[i*matrix->shape.y+j] = 2.0f*(((float)rand()/(float)(RAND_MAX)))-1.0f;
         }
     }
 }
 
 void forward( Layer *layer)
 {
-    memset(layer->output->data, 0, layer->out*sizeof(float));
-    for(int i=0;i<layer->in;i++)
-    {
-        for(int j=0;j<layer->out;j++)
-        {
-            layer->output->data[j] += layer->input->data[i] * layer->weights->data[layer->out*i+j];
-        }
-    }
+    //memset(layer->output->data, 0, layer->out*sizeof(float));
+    vecMatrixMultiplication(layer->input, layer->weights, layer->output);
     layer->actFunc(layer);
     layer->derivFunc(layer);
 
@@ -66,12 +58,12 @@ void forward( Layer *layer)
 
 Layer* createLayer(char activation[], int in, int out)
 {
-    Layer *layer = (Layer*)malloc(sizeof(Layer));
+    Layer *layer = malloc(sizeof(Layer));
 
-    layer->deriv = createMatrix( out, 1);
+    layer->deriv = createMatrix( 1, out);
     layer->weights = createMatrix( in, out);
-    layer->output = createMatrix( out, 1);
-    layer->delta = createMatrix(out, 1);
+    layer->output = createMatrix( 1, out);
+    layer->delta = createMatrix(1, out);
 
 
     layer->in = in;
@@ -88,43 +80,40 @@ Layer* createLayer(char activation[], int in, int out)
 
     layer->free_layer = freeLayer;
     layer->forward_pass = forward;
-    layer->backward_pass = backward;
+    layer->backward_weights = backward;
+    layer->backward_delta = delta;
     layer->nextDelta = NULL;
     layer->nextWeights = NULL;
-    layer->nextOut;
     return layer;
 }
 
-
-void backward(struct Layer* layer, float* front)
+void delta(struct Layer* layer, float* y_hat)
 {
-    float alpha = .1;
     if(layer->nextDelta==NULL)
     {   
         if(layer->out==1)
         {
-            float tmpDelta = *(layer->output->data) - *front;
-            //memmove(layer->delta->data, &tmpDelta, sizeof(float));
-            *(layer->delta->data) = tmpDelta;
+            *(layer->delta->data) = *(layer->output->data) - *y_hat;
         }else{
-            for(int i=0;i<layer->out;i++) layer->delta->data[i] = layer->output->data[i] - front[i];
+            for(int i=0;i<layer->out;i++) layer->delta->data[i] = layer->output->data[i] - y_hat[i];
         }
     }else{
-        //int col = sizeof(layer->nextWeights->data) / sizeof(layer->nextWeights->data[0]) / layer->out;
-        for(int i=0;i<layer->out;i++)
-        {
-            for(int j=0;j<layer->nextOut;j++)
-            {
-                layer->delta->data[i] += layer->nextDelta->data[j] * layer->nextWeights->data[i*layer->nextOut+j];
-            }
-        }
-        for(int i=0;i<layer->out;i++) layer->delta->data[i] = layer->delta->data[i] * layer->deriv->data[i];
+    Matrix *invWeights = createInverse(layer->nextWeights);
+    vecMatrixMultiplication(layer->nextDelta, invWeights, layer->delta);
+    vecElemMultiplication(layer->delta, layer->deriv);
+    invWeights->freeMem(invWeights);
     }
-    for(int i=0; i<layer->in;i++)
-    {
-        for(int j=0; j<layer->out;j++)
-        {
-            layer->weights->data[i*layer->out+j] -= alpha * layer->input->data[i] * layer->delta->data[j]; 
-        }
-    }
+}
+
+
+void backward(struct Layer* layer)
+{
+    float alpha = .2f;
+    Matrix *invInput = createInverse(layer->input);
+    Matrix *weightsDelta = createMatrix(layer->in, layer->out);
+    vecVecMultiplication(invInput, layer->delta, weightsDelta);
+    matrixScalarMultiplication(weightsDelta, alpha);
+    matrixSubtraction(layer->weights, weightsDelta);
+    weightsDelta->freeMem(weightsDelta);
+    invInput->freeMem(invInput);
 }

@@ -21,7 +21,7 @@ struct Node* GetNewNode(char activation[], int in, int out) {
 void InsertAtHead(char activation[], int in, int out) {
 	struct Node* newNode = GetNewNode(activation, in, out);
 	if(head == NULL) {
-        newNode->layer->input = createMatrix(in, 1);
+        newNode->layer->input = createMatrix(1, in);
 		head = newNode;
 		return;
 	}
@@ -30,7 +30,6 @@ void InsertAtHead(char activation[], int in, int out) {
     newNode->layer->input = head->layer->output;
     head->layer->nextDelta = newNode->layer->delta;
     head->layer->nextWeights = newNode->layer->weights;
-	head->layer->nextOut = newNode->layer->out;
 	head = newNode;
 }
 
@@ -51,7 +50,12 @@ void InsertAtTail(char activation[], int in, int out) {
 void Backward(float *y) {
 	struct Node* temp = head;
 	while(temp != NULL) {
-		temp->layer->backward_pass(temp->layer, y);
+		temp->layer->backward_delta(temp->layer, y);
+		temp = temp->next;
+	}
+	temp = head;
+	while(temp != NULL) {
+		temp->layer->backward_weights(temp->layer);
 		temp = temp->next;
 	}
 }
@@ -60,7 +64,25 @@ void Backward(float *y) {
 
 void Forward(float *input, float *output) {
 	struct Node* temp = head;
-	if(temp == NULL) return; // empty list, exit
+	if(temp == NULL) {return; printf("error in forward pass");} 
+	// Going to last Node
+	while(temp->next != NULL) {
+		temp = temp->next;
+	}
+	// Traversing backward using prev pointer
+	//memmove(temp->layer->input, input, sizeof(float)*temp->layer->in);
+	for(int i=0; i<temp->layer->in; i++) temp->layer->input->data[i] = input[i];
+
+	while(temp != NULL) {
+        temp->layer->forward_pass(temp->layer);
+        if(temp->prev==NULL) *output = *(temp->layer->output->data);
+		temp = temp->prev;
+	}
+}
+/*
+void Forward(float *input, float *output) {
+	struct Node* temp = head;
+	if(temp == NULL) {return; printf("error in forward pass");} 
 	// Going to last Node
 	while(temp->next != NULL) {
 		temp = temp->next;
@@ -69,12 +91,24 @@ void Forward(float *input, float *output) {
 	//memmove(temp->layer->input, input, sizeof(float)*temp->layer->in);
 	for(int i=0; i<temp->layer->in; i++) temp->layer->input->data[i] = input[i];
 	while(temp != NULL) {
-        temp->layer->forward_pass(temp->layer);
+		printf("\nWeights\n");
+		for(int i=0; i<temp->layer->in; i++){
+			for(int j=0;j<temp->layer->out;j++){
+				printf("%f ", temp->layer->weights->data[i*temp->layer->out + j]);
+			}
+			printf("\n");
+		}
+		//printf("Input\n");
+		//for(int i=0; i<temp->layer->in; i++){printf("%f ", temp->layer->input->data[i]);}
+		temp->layer->forward_pass(temp->layer);
         if(temp->prev==NULL) *output = *(temp->layer->output->data);
+		//printf("\nOutput\n");
+		//for(int i=0; i<temp->layer->out; i++){printf("%f ", temp->layer->output->data[i]);}
+		//printf("\n\n");
 		temp = temp->prev;
 	}
 }
-
+*/
 void Delete() {
     	struct Node* temp = head;
         struct Node* prev = temp;
