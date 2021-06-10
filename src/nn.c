@@ -16,22 +16,45 @@ struct Node* GetNewNode(char activation[], int in, int out) {
 	newNode->next = NULL;
 	return newNode;
 }
-//So then head is the first
-//Inserts a Node at head of doubly linked list
-void InsertAtHead(char activation[], int in, int out) {
-	struct Node* newNode = GetNewNode(activation, in, out);
+
+//With this one we set up an input layer, we define the learning rate
+//and then set up a vector for the input to be placed into
+struct Node* GetFirstNode(float lr, int out) {
+	struct Node* newNode
+		= (struct Node*)malloc(sizeof(struct Node));
+	newNode->layer = createLayer("none", 1, out);
+	newNode->prev = NULL;
+	newNode->next = NULL;
+	newNode->layer->lr = lr;
+	return newNode;
+}
+
+//This creates the actual input layer
+//The main goal with differentiating this is two fold,
+//by defining the input layer like this I can use every previous layers output as the dimension
+//for the new layers input. Meaning that looking forward a little bit convolutional layers can be flattened
+//and have their flattened dimensions used as input for the linear layers
+//The other idea is to use this to introduce other things such as optimizers
+void InsertFirst(float lr, int out) {
+	struct Node* newNode = GetFirstNode(lr, out);
 	if(head == NULL) {
-        newNode->layer->input = createMatrix(1, in);
 		head = newNode;
 		return;
 	}
+}
+//So then head is the first
+//Inserts a Node at head of doubly linked list
+void InsertAtHead(char activation[], int out) {
+	struct Node* newNode = GetNewNode(activation, head->layer->out, out);
 	head->prev = newNode;
-	newNode->next = head; 
+	newNode->next = head;
+	newNode->layer->lr = head->layer->lr; 
     newNode->layer->input = head->layer->output;
     head->layer->nextDelta = newNode->layer->delta;
     head->layer->nextWeights = newNode->layer->weights;
 	head = newNode;
 }
+
 
 //Inserts a Node at tail of Doubly linked list
 void InsertAtTail(char activation[], int in, int out) {
@@ -46,22 +69,22 @@ void InsertAtTail(char activation[], int in, int out) {
 	newNode->prev = temp;
 }
 
+
 //Prints all the elements in linked list in forward traversal order
 void Backward(float *y) {
 	struct Node* temp = head;
-	while(temp != NULL) {
+	while(temp->next != NULL) {
 		temp->layer->backward_delta(temp->layer, y);
 		temp = temp->next;
 	}
 	temp = head;
-	while(temp != NULL) {
+	while(temp->next != NULL) {
 		temp->layer->backward_weights(temp->layer);
 		temp = temp->next;
 	}
 }
 
 
-
 void Forward(float *input, float *output) {
 	struct Node* temp = head;
 	if(temp == NULL) {return; printf("error in forward pass");} 
@@ -70,45 +93,17 @@ void Forward(float *input, float *output) {
 		temp = temp->next;
 	}
 	// Traversing backward using prev pointer
-	//memmove(temp->layer->input, input, sizeof(float)*temp->layer->in);
-	for(int i=0; i<temp->layer->in; i++) temp->layer->input->data[i] = input[i];
-
+	memmove(temp->layer->output->data, input, sizeof(float)*temp->layer->out);
+	//for(int i=0; i<temp->layer->out; i++) temp->layer->output->data[i] = input[i];
+	temp = temp->prev;
 	while(temp != NULL) {
         temp->layer->forward_pass(temp->layer);
         if(temp->prev==NULL) *output = *(temp->layer->output->data);
 		temp = temp->prev;
 	}
 }
-/*
-void Forward(float *input, float *output) {
-	struct Node* temp = head;
-	if(temp == NULL) {return; printf("error in forward pass");} 
-	// Going to last Node
-	while(temp->next != NULL) {
-		temp = temp->next;
-	}
-	// Traversing backward using prev pointer
-	//memmove(temp->layer->input, input, sizeof(float)*temp->layer->in);
-	for(int i=0; i<temp->layer->in; i++) temp->layer->input->data[i] = input[i];
-	while(temp != NULL) {
-		printf("\nWeights\n");
-		for(int i=0; i<temp->layer->in; i++){
-			for(int j=0;j<temp->layer->out;j++){
-				printf("%f ", temp->layer->weights->data[i*temp->layer->out + j]);
-			}
-			printf("\n");
-		}
-		//printf("Input\n");
-		//for(int i=0; i<temp->layer->in; i++){printf("%f ", temp->layer->input->data[i]);}
-		temp->layer->forward_pass(temp->layer);
-        if(temp->prev==NULL) *output = *(temp->layer->output->data);
-		//printf("\nOutput\n");
-		//for(int i=0; i<temp->layer->out; i++){printf("%f ", temp->layer->output->data[i]);}
-		//printf("\n\n");
-		temp = temp->prev;
-	}
-}
-*/
+
+
 void Delete() {
     	struct Node* temp = head;
         struct Node* prev = temp;
@@ -117,7 +112,6 @@ void Delete() {
 	while(temp->next != NULL) {
 		temp = temp->next;
 	}
-	temp->layer->input->freeMem(temp->layer->input);
 	while(temp != NULL) {
 		prev = temp->prev;
         //if(prev==NULL) temp->layer->input->freeMem(temp->layer->input);
@@ -127,9 +121,11 @@ void Delete() {
 	}
 }
 
-NeuralNet createNetwork(void)
+
+NeuralNet createNetwork(float lr, int in)
 {
 	NeuralNet nn;
+	InsertFirst(lr, in);
 	nn.add_linear_layer = InsertAtHead;
 	nn.backward_pass = Backward;
 	nn.forward_pass = Forward;

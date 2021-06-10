@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #include "../include/activation_functions.h"
-#include "../include/layer.h"
+#include "../include/linear.h"
 #include "../include/mmath.h"
 //#include "../include/nn.h"
 
@@ -25,7 +25,7 @@ fn(list_for_apply[i]);                                              \
 #define free_all(...) apply_func(void, free, __VA_ARGS__);
 
 
-void freeLayer(Layer* layer)
+void freeLayer(LinearLayer* layer)
 {
     layer->weights->freeMem(layer->weights);
     layer->output->freeMem(layer->output);
@@ -46,7 +46,7 @@ void makeWeights( Matrix* matrix)
     }
 }
 
-void forward( Layer *layer)
+void forward(LinearLayer *layer)
 {
     //memset(layer->output->data, 0, layer->out*sizeof(float));
     vecMatrixMultiplication(layer->input, layer->weights, layer->output);
@@ -56,9 +56,9 @@ void forward( Layer *layer)
 }
 
 
-Layer* createLayer(char activation[], int in, int out)
+LinearLayer* createLayer(char activation[], int in, int out)
 {
-    Layer *layer = malloc(sizeof(Layer));
+    LinearLayer *layer = malloc(sizeof(LinearLayer));
 
     layer->deriv = createMatrix( 1, out);
     layer->weights = createMatrix( in, out);
@@ -87,7 +87,7 @@ Layer* createLayer(char activation[], int in, int out)
     return layer;
 }
 
-void delta(struct Layer* layer, float* y_hat)
+void delta(struct LinearLayer* layer, float* y_hat)
 {
     if(layer->nextDelta==NULL)
     {   
@@ -106,13 +106,12 @@ void delta(struct Layer* layer, float* y_hat)
 }
 
 
-void backward(struct Layer* layer)
+void backward(struct LinearLayer* layer)
 {
-    float alpha = .2f;
     Matrix *invInput = createInverse(layer->input);
     Matrix *weightsDelta = createMatrix(layer->in, layer->out);
     vecVecMultiplication(invInput, layer->delta, weightsDelta);
-    matrixScalarMultiplication(weightsDelta, alpha);
+    matrixScalarMultiplication(weightsDelta, layer->lr);
     matrixSubtraction(layer->weights, weightsDelta);
     weightsDelta->freeMem(weightsDelta);
     invInput->freeMem(invInput);

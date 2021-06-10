@@ -3,7 +3,7 @@
 
 #include "../include/activation_functions.h"
 
-void relu(Layer* layer)
+void relu(LinearLayer* layer)
 {
     for(int i=0; i<layer->out; i++)
     {
@@ -14,7 +14,7 @@ void relu(Layer* layer)
     }
 }
 
-void relu_deriv(Layer* layer)
+void relu_deriv(LinearLayer* layer)
 {
     for(int i=0; i<layer->out; i++)
     {
@@ -26,7 +26,7 @@ void relu_deriv(Layer* layer)
         }
     }
 }
-void none(Layer* layer)
+void none(LinearLayer* layer)
 {
     sleep(0);
 }

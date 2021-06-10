@@ -2,12 +2,12 @@
 #ifndef _ACTIVATION_FUNCTIONS_H
 #define _ACTIVATION_FUNCTIONS_H
 
-#include "layer.h"
+#include "linear.h"
 
-void relu(Layer*);
+void relu(LinearLayer*);
 
-void relu_deriv(Layer*);
+void relu_deriv(LinearLayer*);
 
-void none(Layer*);
+void none(LinearLayer*);
 
 #endif

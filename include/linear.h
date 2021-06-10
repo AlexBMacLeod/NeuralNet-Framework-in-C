@@ -1,15 +1,15 @@
 //
 // Created by alex on 30/05/21.
 //
-#ifndef _LAYER_H
-#define _LAYER_H
+#ifndef _LINEAR_H
+#define _LINEAR_H
 
 #include "tensor.h"
 //#include "activation_functions.h"
 
 
 
-typedef struct Layer{
+typedef struct LinearLayer{
     Matrix *weights;
     Matrix *output;
     Matrix *deriv;
@@ -17,15 +17,16 @@ typedef struct Layer{
     Matrix *delta;
     Matrix *nextDelta;
     Matrix *nextWeights;
+    float lr;
     int in;
     int out;
-    void (*actFunc)(struct Layer*);
-    void (*derivFunc)(struct Layer*);
-    void (*forward_pass)(struct Layer*);
-    void (*backward_weights)(struct Layer*);
-    void (*backward_delta)(struct Layer*, float*);
-    void (*free_layer)(struct Layer*);
-} Layer;
+    void (*actFunc)(struct LinearLayer*);
+    void (*derivFunc)(struct LinearLayer*);
+    void (*forward_pass)(struct LinearLayer*);
+    void (*backward_weights)(struct LinearLayer*);
+    void (*backward_delta)(struct LinearLayer*, float*);
+    void (*free_layer)(struct LinearLayer*);
+} LinearLayer;
 
 
 
@@ -42,17 +43,17 @@ layer.backward_pass(&layer, delta);
 
 void makeWeights( Matrix*);
 
-void freeLayer(Layer*);
+void freeLayer(LinearLayer*);
 
 //void initLinear( layer*, int, int, activation *funcs);
-void initLayer( Layer**, char[], int, int);
+void initLayer( LinearLayer**, char[], int, int);
 
-Layer* createLayer(char[], int, int);
+LinearLayer* createLayer(char[], int, int);
 
-void forward( Layer*);
+void forward( LinearLayer*);
 //
-void backward( Layer*);
+void backward( LinearLayer*);
 
-void delta(Layer*, float*);
+void delta(LinearLayer*, float*);
 
-#endif //_LAYER_H
+#endif //_LINEAR_H
