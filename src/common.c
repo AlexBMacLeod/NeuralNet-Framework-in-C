@@ -26,7 +26,6 @@ void checkLen(char file[], int *len)
 
 void load_data(char file[], float* data)
 {
-    int rows=0;
     FILE *in = fopen(file, "r");
     if (!in) {
         fprintf(stderr, "Could not open file: %s\n", file);
@@ -81,11 +80,8 @@ void splitLabels(float *data, float *training_data, int *labels, int len)
 
 void one_hot_encoder(int *data, float *one_hot_encoded, int len)
 {
-    int tmp;
-    one_hot_encoded = calloc((len)*10, sizeof(float));
     for(int i=0; i<(len); i++)
     {
-        tmp = data[i];
         for(int j=0; j<10; j++){
             if(j==data[i]){ one_hot_encoded[i*10+j]=1.0f;
         }else{
