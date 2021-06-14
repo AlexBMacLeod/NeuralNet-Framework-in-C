@@ -87,15 +87,15 @@ LinearLayer* createLayer(char activation[], int in, int out)
     return layer;
 }
 
-void delta(struct LinearLayer* layer, float* y_hat)
+void delta(struct LinearLayer* layer, float* y)
 {
     if(layer->nextDelta==NULL)
     {   
         if(layer->out==1)
         {
-            *(layer->delta->data) = *(layer->output->data) - *y_hat;
+            *(layer->delta->data) = *(layer->output->data) - *y;
         }else{
-            for(int i=0;i<layer->out;i++) layer->delta->data[i] = layer->output->data[i] - y_hat[i];
+            for(int i=0;i<layer->out;i++) layer->delta->data[i] = layer->output->data[i] - y[i];
         }
     }else{
     Matrix *invWeights = createInverse(layer->nextWeights);

@@ -2,66 +2,95 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #include "../include/common.h"
 
-
-void load_data(char file[], float *data, float *labels)
+void checkLen(char file[], int *len)
 {
-    int rows;
+    int rows=0;
     FILE *in = fopen(file, "r");
     if (!in) {
-        printf("Could not open file: %s\n", file);
+        fprintf(stderr, "Could not open file: %s\n", file);
         exit(1);
-    }
+    }else{
 
-
-    char line[2560];
-    while (!feof(in) && fgets(line, 2560, in)) {
-        ++rows;
-    }
-    fseek(in, 0, SEEK_SET);
-
-    printf("Loading %d rows from %s\n", rows, file);
-
-
-    data = malloc(sizeof(float) * rows * 28 * 28 - 1);
-    labels = malloc(sizeof(float) * rows - 1);
-
-    int row_count = 0;
-    int field_count = 0;
-    int i = 0;
-    while(fgets(line, 2560, in))
-    {
-        field_count = 0;
-        row_count ++;
-        if(row_count==1) continue;
-
-        char *field = strtok(line, ",");
-        while(field)
-        {
-            if(field_count == 0){
-             labels[i]=atof(field);
-            }else{
-                data[i*28*28+field_count] = atof(field)/256.0f;
-            }
-            field = strtok(NULL, ",");
-            field_count++;
+        char line[8192];
+        while (!feof(in) && fgets(line, 8192, in)) {
+            ++rows;
         }
-        i++;
+        printf("Loading %d rows from %s\n", rows, file);
+        *len = rows-1;
+        fclose(in);
     }
-
-    fclose(in);
 }
 
-void one_hot_encoder(int *data, float *one_hot_encoded)
+void load_data(char file[], float* data)
 {
-    int len;
-    int tmp;
-    len = sizeof(data)/sizeof(int);
-    one_hot_encoded = (float*)malloc(sizeof(float)*len*10);
+    int rows=0;
+    FILE *in = fopen(file, "r");
+    if (!in) {
+        fprintf(stderr, "Could not open file: %s\n", file);
+        exit(1);
+    }else{
+        char line[8192];
+        char* token = NULL;
+        long index = 0;
+    
+        int row = 0;
+        int column = 0;
+    
+        while (!feof(in) && fgets(line, 8192, in)) {
+            column = 0;
+            if (row == 0)
+                continue;
+
+            token = strtok(line, ",");
+    
+            while (token) {
+                index = (row-1)*785+column;
+                data[index] = atof(token);
+                token = strtok(NULL, ",");
+                column++;
+            }
+            row++;
+        }
+    fclose(in);
+    }
+}
+
+void splitLabels(float *data, float *training_data, int *labels, int len)
+{
+    int y = 0;
+    long indexOne;
+    long indexTwo;
     for(int i=0; i<len; i++)
     {
+        y=0;
+        for(int j=0; j<785; j++)
+            {
+            if(j==0) labels[i] = (int)data[785*i];
+            else{
+                indexOne = 785*i+j;
+                indexTwo = 784*i+y;
+                training_data[indexTwo] = data[indexOne]/255.0f;
+                y++;
+            }
+        }
+    }
+}
+
+void one_hot_encoder(int *data, float *one_hot_encoded, int len)
+{
+    int tmp;
+    one_hot_encoded = calloc((len)*10, sizeof(float));
+    for(int i=0; i<(len); i++)
+    {
         tmp = data[i];
-        one_hot_encoded[i*10+tmp] = 1.0f;
+        for(int j=0; j<10; j++){
+            if(j==data[i]){ one_hot_encoded[i*10+j]=1.0f;
+        }else{
+            one_hot_encoded[i*10+j]=0.0f;
+        }
+    }
     }
 }
