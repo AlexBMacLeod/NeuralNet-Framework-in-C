@@ -24,7 +24,7 @@ void checkLen(char file[], int *len)
     }
 }
 
-void load_data(char file[], float* data)
+void load_data(char file[], float* data, int* labels)
 {
     FILE *in = fopen(file, "r");
     if (!in) {
@@ -39,19 +39,21 @@ void load_data(char file[], float* data)
         int column = 0;
     
         while (!feof(in) && fgets(line, 8192, in)) {
-            column = 0;
-            if (row == 0)
+            row++;
+            if (row == 1)
                 continue;
-
             token = strtok(line, ",");
-    
+            column = 0;
             while (token) {
-                index = (row-1)*785+column;
-                data[index] = atof(token);
+                if(column==0){ 
+                    labels[row-2]=atoi(token);
+                }else{
+                    index = (row-2)*784+(column-1);
+                    data[index] = atof(token)/255.0f;
+                }
                 token = strtok(NULL, ",");
                 column++;
             }
-            row++;
         }
     fclose(in);
     }
@@ -60,6 +62,7 @@ void load_data(char file[], float* data)
 void splitLabels(float *data, float *training_data, int *labels, int len)
 {
     int y = 0;
+    long index;
     long indexOne;
     long indexTwo;
     for(int i=0; i<len; i++)
@@ -67,8 +70,10 @@ void splitLabels(float *data, float *training_data, int *labels, int len)
         y=0;
         for(int j=0; j<785; j++)
             {
-            if(j==0) labels[i] = (int)data[785*i];
-            else{
+            if(j==0){
+                index = 785*i;
+                labels[i] = (int)data[index];
+            }else{
                 indexOne = 785*i+j;
                 indexTwo = 784*i+y;
                 training_data[indexTwo] = data[indexOne]/255.0f;
@@ -80,13 +85,8 @@ void splitLabels(float *data, float *training_data, int *labels, int len)
 
 void one_hot_encoder(int *data, float *one_hot_encoded, int len)
 {
-    for(int i=0; i<(len); i++)
+    for(int i=0; i<len; i++)
     {
-        for(int j=0; j<10; j++){
-            if(j==data[i]){ one_hot_encoded[i*10+j]=1.0f;
-        }else{
-            one_hot_encoded[i*10+j]=0.0f;
-        }
-    }
+        one_hot_encoded[i*10+data[i]] = 1.0f;
     }
 }

@@ -98,7 +98,10 @@ void Forward(float *input, float *output) {
 	temp = temp->prev;
 	while(temp != NULL) {
         temp->layer->forward_pass(temp->layer);
-        if(temp->prev==NULL) *output = *(temp->layer->output->data);
+        if(temp->prev==NULL){ 
+			memmove(output, temp->layer->output->data, sizeof(float)*temp->layer->out);
+			//for(int i=0;i<10;i++) printf("%f ", temp->layer->output->data[i]);
+		}
 		temp = temp->prev;
 	}
 }
