@@ -135,3 +135,17 @@ NeuralNet createNetwork(float lr, int in)
 	nn.clean_up = Delete;
 	return nn;
 }
+
+int validation_run(float *train, float *train_labels, int len, NeuralNet nn)
+{
+	int correct_cnt = 0;
+	float *in = calloc(784, sizeof(float));
+	float *y_hat = calloc(10, sizeof(float));
+	for(int i=0; i<len; i++)
+	{
+		memmove(in, (train+(i*784)), sizeof(float)*784); 
+        nn.forward_pass(in, y_hat);
+        correct_cnt += argmax(y_hat, *(labels_raw+i), 10);
+	}
+	return correct_cnt;
+}

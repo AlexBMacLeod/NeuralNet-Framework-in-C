@@ -90,3 +90,22 @@ void one_hot_encoder(int *data, float *one_hot_encoded, int len)
         one_hot_encoded[i*10+data[i]] = 1.0f;
     }
 }
+
+int argmax(float *y_hat, int y, int len)
+{
+    int y_hat_col = 0; 
+    int y_col = 0;
+    for(int i=0; i<len; i++) if(y_hat[i]>y_hat[y_hat_col]) y_hat_col=i;
+    if(y_col==y){ return 1;
+    }else return 0;
+}
+
+void test_train_split(float *data, float* labels, float *train, float *test, float *train_labels, float *test_labels, int len, float ratio)
+{
+    int seperator = ratio*len;
+    int remainder = (1-ratio)*len;
+    memmove(train, data, sizeof(float)*seperator*784);
+    memmove(test, (data+seperator), sizeof(float)*remainder*784);
+    memmove(train_labels, labels, sizeof(float)*seperator);
+    memmove(test_labels, labels+seperator, sizeof(float)*remainder);
+}

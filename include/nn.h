@@ -39,4 +39,6 @@ void Delete();
 
 void Backward(float*);
 
+int validation_run(float*, float*, int, NeuralNet);
+
 #endif //_NN_H
