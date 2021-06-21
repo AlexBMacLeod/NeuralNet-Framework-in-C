@@ -15,46 +15,50 @@ int main(void)
     nn.add_linear_layer("relu", 256);
     nn.add_linear_layer("none", 10);
 
-    float *data_raw, *data, *labels, *train, *test, *train_labels, *test_labels;
+    float *data, *labels, *train, *test, *train_labels, *test_labels;
     int *labels_raw;
+    int test_size, train_size, len=0;
     char file[] = "../data/train.csv";
-    int len=0;
     checkLen(file, &len);
-    //data_raw = calloc((len)*785, sizeof(float));
+    printf("\n1\n");
+    test_size = len*(1-TEST_TRAIN_SPLIT);
+    train_size = len*TEST_TRAIN_SPLIT;
     data = calloc(len*784, sizeof(float));
-    train = calloc(len*TEST_TRAIN_SPLIT*784, sizeof(float));
-    test = calloc(len*(1-TEST_TRAIN_SPLIT)*784, sizeof(float));
-    labels_raw = calloc(len, sizeof(float));
+    train = calloc(train_size*784, sizeof(float));
+    test = calloc(test_size*784, sizeof(float));
+    labels_raw = calloc(len, sizeof(int));
     labels = calloc(len*10, sizeof(float));
-    train_labels = calloc(len*10*TEST_TRAIN_SPLIT, sizeof(float));
-    test_labels = calloc(len*10*(1-TEST_TRAIN_SPLIT), sizeof(float));
+    train_labels = calloc(train_size*10, sizeof(float));
+    test_labels = calloc(test_size*10, sizeof(float));
+    printf("2\n");
     load_data(file, data, labels_raw);
+    printf("3\n");
     one_hot_encoder(labels_raw, labels, len);
-    test_train_split(data, labels, train, test, train_labels, test_labels, len, TEST_TRAIN_SPLIT);
+    printf("4\n");
+    test_train_split(data, labels, train, test, train_labels, test_labels, len, train_size, test_size);
+    printf("5\n");
     float *y_hat = calloc(10, sizeof(float));
     float *in = calloc(784, sizeof(float));
     float *y = calloc(10, sizeof(float));
-    free_all(labels_raw, data, labels, labels_raw);
-
+    free_all(labels_raw, data, labels);
+    printf("6");
 
     
     for(int iteration=0;iteration<600;iteration++)
     {
         printf("Iteration: %d\n",iteration);
         float error=0;
-        int correct_cnt = 0;
         for(int i=0;i<1000;i++)
         {
-            memmove(in, (data+(i*784)), sizeof(float)*784); 
+            memmove(in, (train+(i*784)), sizeof(float)*784);
             nn.forward_pass(in, y_hat);
-            memmove(y, (labels+(i*10)), sizeof(float)*10);
+            memmove(y, (train_labels+(i*10)), sizeof(float)*10);
             for(int j=0;j<10;j++)error += pow(y_hat[j]-y[j],2);
-            correct_cnt += argmax(y_hat, *(labels_raw+i), 10);
             nn.backward_pass(y);
         }
         if(iteration%10==9){
-            printf("Error: %f\n", error);}
-        printf("Correct Count: %d/1000\n", correct_cnt);
+            printf("Error: %f\n", error);
+            printf("Correct Count: %d/1000\n", validation_run( test, test_labels, test_size, nn));}
     }
 
     nn.clean_up();

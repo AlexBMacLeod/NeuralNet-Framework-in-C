@@ -18,8 +18,8 @@ void one_hot_encoder(int*, float*, int);
 
 void splitLabels(float*, float*, int*, int);
 
-int argmax(float*, int, int);
+int argmax(float*, float*, int);
 
-void test_train_split(float*, float*, float*, float*, float*, float*, int, float);
+void test_train_split(float*, float*, float*, float*, float*, float*, int, int, int);
 
 #endif

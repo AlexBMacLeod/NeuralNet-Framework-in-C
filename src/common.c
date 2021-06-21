@@ -19,7 +19,7 @@ void checkLen(char file[], int *len)
             ++rows;
         }
         printf("Loading %d rows from %s\n", rows, file);
-        *len = rows-1;
+        *len = rows;
         fclose(in);
     }
 }
@@ -76,7 +76,7 @@ void splitLabels(float *data, float *training_data, int *labels, int len)
             }else{
                 indexOne = 785*i+j;
                 indexTwo = 784*i+y;
-                training_data[indexTwo] = data[indexOne]/255.0f;
+                training_data[indexTwo] = data[indexOne];
                 y++;
             }
         }
@@ -91,21 +91,22 @@ void one_hot_encoder(int *data, float *one_hot_encoded, int len)
     }
 }
 
-int argmax(float *y_hat, int y, int len)
+int argmax(float *y_hat, float *y, int len)
 {
     int y_hat_col = 0; 
     int y_col = 0;
-    for(int i=0; i<len; i++) if(y_hat[i]>y_hat[y_hat_col]) y_hat_col=i;
-    if(y_col==y){ return 1;
+    for(int i=0; i<len; i++){
+        if(y_hat[i]>y_hat[y_hat_col]) y_hat_col=i;
+        if(y[i]>y[y_col]) y_col = i;
+    }
+    if(y_hat_col==y_col){ return 1;
     }else return 0;
 }
 
-void test_train_split(float *data, float* labels, float *train, float *test, float *train_labels, float *test_labels, int len, float ratio)
+void test_train_split(float *data, float* labels, float *train, float *test, float *train_labels, float *test_labels, int len, int train_size, int test_size)
 {
-    int seperator = ratio*len;
-    int remainder = (1-ratio)*len;
-    memmove(train, data, sizeof(float)*seperator*784);
-    memmove(test, (data+seperator), sizeof(float)*remainder*784);
-    memmove(train_labels, labels, sizeof(float)*seperator);
-    memmove(test_labels, labels+seperator, sizeof(float)*remainder);
+    memmove(train, data, sizeof(float)*train_size*784);
+    memmove(test, data+train_size, sizeof(float)*test_size*784);
+    memmove(train_labels, labels, sizeof(float)*train_size);
+    memmove(test_labels, labels+train_size, sizeof(float)*test_size);
 }
