@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 
 #include "../include/common.h"
@@ -143,4 +144,30 @@ struct mnist load_mnist(char file[], float testTrainSplit)
     out.train_labels=train_labels;
     free_all(labels_raw, data, labels);
     return out;
+}
+
+float calc_batch_error(float *y, float *y_hat, int out_size, int batch_size)
+{
+    float error = 0.0f;
+    for(int i=0; i<batch_size; i++)
+    {
+        for(int j=0; j<out_size; j++) error += pow(y_hat[i*out_size+j]-y[i*out_size+j],2);
+    }
+    return error;
+}
+
+int argmax_batch(float *y_hat, float *y, int len, int batch_size)
+{
+    int y_col, y_hat_col, correct = 0;
+    for(int i=0; i<batch_size; i++)
+    {
+        y_col=0;y_hat_col=0;
+        for(int j=0; j<len; j++) 
+        {
+            if(y_hat[i*len+j]>y_hat[i*len+y_hat_col]) y_hat_col=j;
+            if(y[i*len+j]>y[i*len+y_col]) y_col = j;
+        }
+    if(y_hat_col==y_col) correct++;
+    }
+    return correct;
 }

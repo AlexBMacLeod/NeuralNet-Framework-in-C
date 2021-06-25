@@ -19,19 +19,19 @@ typedef struct NeuralNet{
 extern struct Node* head; // global variable - pointer to head node.
 
 //Creates a new Node and returns pointer to it. 
-struct Node* GetNewNode(char[], int, int);
+struct Node* GetNewNode(char[], int, int, int);
 
-struct Node* GetFirstNode(float lr, int out);
+struct Node* GetFirstNode(float, int, int);
 
 //Inserts a Node at head of doubly linked list
 void InsertAtHead(char[], int);
 
-void InsertFirst(float lr, int out);
+void InsertFirst(float, int, int);
 
 //Inserts a Node at tail of Doubly linked list
-void InsertAtTail(char[], int, int);
+void InsertAtTail(char[], int, int, int);
 
-NeuralNet createNetwork(float, int);
+NeuralNet createNetwork(float, int, int);
 
 void Forward(float*, float*);
 
@@ -39,6 +39,6 @@ void Delete();
 
 void Backward(float*);
 
-int validation_run(float*, float*, int, NeuralNet);
+int validation_run(float*, float*, int, int, NeuralNet);
 
 #endif //_NN_H

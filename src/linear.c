@@ -41,23 +41,23 @@ void makeWeights( Matrix* matrix)
 void forward(LinearLayer *layer)
 {
     //memset(layer->output->data, 0, layer->out*sizeof(float));
-    vecMatrixMultiplication(layer->input, layer->weights, layer->output);
+    matrixMultiplication(layer->input, layer->weights, layer->output);
     layer->actFunc(layer);
     layer->derivFunc(layer);
 
 }
 
 
-LinearLayer* createLayer(char activation[], int in, int out)
+LinearLayer* createLayer(char activation[], int in, int out, int batch_size)
 {
     LinearLayer *layer = malloc(sizeof(LinearLayer));
 
-    layer->deriv = createMatrix( 1, out);
+    layer->deriv = createMatrix( batch_size, out);
     layer->weights = createMatrix( in, out);
-    layer->output = createMatrix( 1, out);
-    layer->delta = createMatrix(1, out);
+    layer->output = createMatrix( batch_size, out);
+    layer->delta = createMatrix( batch_size, out);
 
-
+    layer->batch_size = batch_size;
     layer->in = in;
     layer->out = out;
     makeWeights( layer->weights);
@@ -83,16 +83,18 @@ void delta(struct LinearLayer* layer, float* y)
 {
     if(layer->nextDelta==NULL)
     {   
-        if(layer->out==1)
+        float b_size = layer->batch_size;
+        for(int i=0; i<layer->delta->shape.x; i++)
         {
-            *(layer->delta->data) = *(layer->output->data) - *y;
-        }else{
-            for(int i=0;i<layer->out;i++) layer->delta->data[i] = layer->output->data[i] - y[i];
+            for(int j=0; j<layer->delta->shape.y; j++)
+            {
+                layer->delta->data[i*layer->out+j] = (layer->output->data[i*layer->out+j] - y[i*layer->out+j])/b_size;
+            }
         }
     }else{
     Matrix *invWeights = createInverse(layer->nextWeights);
-    vecMatrixMultiplication(layer->nextDelta, invWeights, layer->delta);
-    vecElemMultiplication(layer->delta, layer->deriv);
+    matrixMultiplication(layer->nextDelta, invWeights, layer->delta);
+    elemMatrixMultInPlace(layer->delta, layer->deriv);
     invWeights->freeMem(invWeights);
     }
 }
@@ -102,7 +104,7 @@ void backward(struct LinearLayer* layer)
 {
     Matrix *invInput = createInverse(layer->input);
     Matrix *weightsDelta = createMatrix(layer->in, layer->out);
-    vecVecMultiplication(invInput, layer->delta, weightsDelta);
+    matrixMultiplication(invInput, layer->delta, weightsDelta);
     matrixScalarMultiplication(weightsDelta, layer->lr);
     matrixSubtraction(layer->weights, weightsDelta);
     weightsDelta->freeMem(weightsDelta);

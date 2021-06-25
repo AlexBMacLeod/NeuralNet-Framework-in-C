@@ -5,24 +5,27 @@
 
 void relu(LinearLayer* layer)
 {
-    for(int i=0; i<layer->out; i++)
+    for(int i=0; i<layer->batch_size; i++)
     {
-        if(layer->output->data[i]<0)
+        for(int j=0; j<layer->out; j++)
         {
-            layer->output->data[i] = 0.0f;
+            if(layer->output->data[i*layer->out+j]<0) layer->output->data[i*layer->out+j] = 0.0f;
         }
     }
 }
 
 void relu_deriv(LinearLayer* layer)
 {
-    for(int i=0; i<layer->out; i++)
+    for(int i=0; i<layer->batch_size; i++)
     {
-        if(layer->output->data[i]>0)
+        for(int j=0; j<layer->out; j++)
         {
-            layer->deriv->data[i] = 1.0f;
-        }else{
-            layer->deriv->data[i] = 0.0f;
+            if(layer->output->data[i*layer->out+j]>0)
+            {
+                layer->deriv->data[i*layer->out+j] = 1.0f;
+            }else{
+                layer->deriv->data[i*layer->out+j] = 0.0f;
+            }
         }
     }
 }

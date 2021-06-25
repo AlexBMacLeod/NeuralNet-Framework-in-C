@@ -29,7 +29,11 @@ void splitLabels(float*, float*, int*, int);
 
 int argmax(float*, float*, int);
 
+int argmax_batch(float*, float*, int, int);
+
 void test_train_split(float*, float*, float*, float*, float*, float*, int, int, int);
+
+float calc_batch_error(float*, float*, int, int);
 
 struct mnist load_mnist(char[], float);
 

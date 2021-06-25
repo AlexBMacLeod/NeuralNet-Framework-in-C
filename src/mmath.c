@@ -22,13 +22,15 @@ void matrixMultiplication(Matrix* A, Matrix* B, Matrix* C)
     float sum;
     int i, j, k;
     assert(A->shape.y == B->shape.x);
+    assert(A->shape.x == C->shape.x);
+    assert(B->shape.y == C->shape.y);
     //Here we create our parallel loops, we specify that the variables A, B and C are shared between all threads where as
     //i, j and k are private to each thread. This is fairly similar to basic matrix multiplication in
     //CUDA where the matrices would be global and i, j, k local. The performance constraint there as well as here is how the
     //matrices are accessed since C stores arrays in row major form, coalescing memory accesses but that will be done
     //in the CUDA code, not here. Also CUDA allows the use of Shared memory and aggressive caching but these are also beyond
     //the scope of the basic C code
-    #pragma omp parallel shared(A,B,C) private(i,j,k)
+    #pragma omp parallel shared(A,B,C) private(i, sum, j,k)
     {
         #pragma omp for schedule(static)
         for (i = 0; i < A->shape.x; i++) {
@@ -36,7 +38,7 @@ void matrixMultiplication(Matrix* A, Matrix* B, Matrix* C)
                 sum = 0;
                 for (k = 0; k < A->shape.y; k++)
                     sum = sum + A->data[i * A->shape.y + k] * B->data[k * B->shape.y + j];
-                C->data[i * A->shape.y + j] = sum;
+                C->data[i * B->shape.y + j] = sum;
             }
         }
     }
@@ -132,6 +134,23 @@ void matrixScalarMultiplication(Matrix* A, float sc)
         for(int j=0; j<A->shape.y; j++)
         {
             A->data[i*A->shape.y+j] = A->data[i*A->shape.y+j] * sc;
+        }
+    }
+}
+
+void elemMatrixMultInPlace(Matrix* A, Matrix* B)
+{
+    int i, j;
+    assert(A->shape.x == B->shape.x);
+    assert(A->shape.y == B->shape.y);
+
+    #pragma omp parallel shared(A,B) private(i,j)
+    {
+        #pragma omp for schedule(static)
+        for (i = 0; i < A->shape.x; i++) {
+            for (j = 0; j < B->shape.y; j++) {
+                     A->data[i*B->shape.y+j] = A->data[i*B->shape.y+j] * B->data[i*B->shape.y+j];
+            }
         }
     }
 }

@@ -19,6 +19,8 @@ Matrix* createInverse(Matrix*);
 
 void matrixMultiplication(Matrix*, Matrix*, Matrix*);
 
+void elemMatrixMultInPlace(Matrix*, Matrix*);
+
 void matrixVecMultiplication(Matrix*, Matrix*, Matrix*);
 
 void vecMatrixMultiplication(Matrix*, Matrix*, Matrix*);

@@ -18,6 +18,7 @@ typedef struct LinearLayer{
     Matrix *nextDelta;
     Matrix *nextWeights;
     float lr;
+    int batch_size;
     int in;
     int out;
     void (*actFunc)(struct LinearLayer*);
@@ -48,7 +49,7 @@ void freeLayer(LinearLayer*);
 //void initLinear( layer*, int, int, activation *funcs);
 void initLayer( LinearLayer**, char[], int, int);
 
-LinearLayer* createLayer(char[], int, int);
+LinearLayer* createLayer(char[], int, int, int);
 
 void forward( LinearLayer*);
 //
