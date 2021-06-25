@@ -10,6 +10,15 @@ fn(list_for_apply[i]);                                              \
 
 #define free_all(...) Fn_apply(void, free, __VA_ARGS__);
 
+struct mnist{
+    float *test_labels;
+    float *test_data;
+    float *train_labels;
+    float *train_data;
+    int len_test;
+    int len_train;
+};
+
 void load_data(char[], float*, int*);
 
 void checkLen(char[], int*);
@@ -21,5 +30,7 @@ void splitLabels(float*, float*, int*, int);
 int argmax(float*, float*, int);
 
 void test_train_split(float*, float*, float*, float*, float*, float*, int, int, int);
+
+struct mnist load_mnist(char[], float);
 
 #endif

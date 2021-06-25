@@ -115,3 +115,32 @@ void test_train_split(float *data, float* labels, float *train, float *test, flo
     memmove(train_labels, labels, sizeof(float)*train_size*10);
     memmove(test_labels, labels+indexTwo, sizeof(float)*test_size*10);
 }
+
+struct mnist load_mnist(char file[], float testTrainSplit)
+{
+    struct mnist out;
+    float *data, *labels, *train, *test, *train_labels, *test_labels;
+    int *labels_raw;
+    int test_size, train_size, len=0;
+    checkLen(file, &len);
+    test_size = len*(1-testTrainSplit);
+    train_size = len*testTrainSplit;
+    data = calloc(len*784, sizeof(float));
+    train = calloc(train_size*784, sizeof(float));
+    test = calloc(test_size*784, sizeof(float));
+    labels_raw = calloc(len, sizeof(int));
+    labels = calloc(len*10, sizeof(float));
+    train_labels = calloc(train_size*10, sizeof(float));
+    test_labels = calloc(test_size*10, sizeof(float));
+    load_data(file, data, labels_raw);
+    one_hot_encoder(labels_raw, labels, len);
+    test_train_split(data, labels, train, test, train_labels, test_labels, len, train_size, test_size);
+    out.len_test=test_size;
+    out.len_train=train_size;
+    out.test_data=test;
+    out.test_labels=test_labels;
+    out.train_data=train;
+    out.train_labels=train_labels;
+    free_all(labels_raw, data, labels);
+    return out;
+}
