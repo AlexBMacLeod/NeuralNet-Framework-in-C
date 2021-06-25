@@ -10,7 +10,7 @@
 
 int main(void)
 {
-    NeuralNet nn = createNetwork(.005f, 784);
+    NeuralNet nn = createNetwork(.001f, 784);
     nn.add_linear_layer("relu", 512);
     nn.add_linear_layer("relu", 256);
     nn.add_linear_layer("none", 10);
@@ -20,7 +20,6 @@ int main(void)
     int test_size, train_size, len=0;
     char file[] = "../data/train.csv";
     checkLen(file, &len);
-    printf("\n1\n");
     test_size = len*(1-TEST_TRAIN_SPLIT);
     train_size = len*TEST_TRAIN_SPLIT;
     data = calloc(len*784, sizeof(float));
@@ -30,18 +29,14 @@ int main(void)
     labels = calloc(len*10, sizeof(float));
     train_labels = calloc(train_size*10, sizeof(float));
     test_labels = calloc(test_size*10, sizeof(float));
-    printf("2\n");
     load_data(file, data, labels_raw);
-    printf("3\n");
     one_hot_encoder(labels_raw, labels, len);
-    printf("4\n");
     test_train_split(data, labels, train, test, train_labels, test_labels, len, train_size, test_size);
-    printf("5\n");
     float *y_hat = calloc(10, sizeof(float));
     float *in = calloc(784, sizeof(float));
     float *y = calloc(10, sizeof(float));
     free_all(labels_raw, data, labels);
-    printf("6");
+
 
     
     for(int iteration=0;iteration<600;iteration++)
@@ -51,8 +46,8 @@ int main(void)
         for(int i=0;i<1000;i++)
         {
             memmove(in, (train+(i*784)), sizeof(float)*784);
-            nn.forward_pass(in, y_hat);
             memmove(y, (train_labels+(i*10)), sizeof(float)*10);
+            nn.forward_pass(in, y_hat);
             for(int j=0;j<10;j++)error += pow(y_hat[j]-y[j],2);
             nn.backward_pass(y);
         }
@@ -62,6 +57,6 @@ int main(void)
     }
 
     nn.clean_up();
-    free_all(in, y_hat, y, data, train_labels, test_labels, train, test);
+    free_all(in, y_hat, y, train_labels, test_labels, train, test);
     return 0;
 }

@@ -36,7 +36,9 @@ void load_data(char file[], float* data, int* labels)
         long index = 0;
     
         int row = 0;
+        long rowInner = 0;
         int column = 0;
+        int colInner = 0;
     
         while (!feof(in) && fgets(line, 8192, in)) {
             row++;
@@ -44,16 +46,19 @@ void load_data(char file[], float* data, int* labels)
                 continue;
             token = strtok(line, ",");
             column = 0;
+            colInner = 0;
             while (token) {
                 if(column==0){ 
-                    labels[row-2]=atoi(token);
+                    labels[rowInner]=atoi(token);
                 }else{
-                    index = (row-2)*784+(column-1);
+                    index = rowInner*784+colInner;
                     data[index] = atof(token)/255.0f;
                 }
-                token = strtok(NULL, ",");
                 column++;
+                colInner++;
+                token = strtok(NULL, ",");
             }
+            rowInner++;
         }
     fclose(in);
     }
@@ -62,14 +67,12 @@ void load_data(char file[], float* data, int* labels)
 void splitLabels(float *data, float *training_data, int *labels, int len)
 {
     int y = 0;
-    long index;
-    long indexOne;
-    long indexTwo;
+    long index, indexOne, indexTwo;
     for(int i=0; i<len; i++)
     {
         y=0;
         for(int j=0; j<785; j++)
-            {
+        {
             if(j==0){
                 index = 785*i;
                 labels[i] = (int)data[index];
@@ -105,8 +108,10 @@ int argmax(float *y_hat, float *y, int len)
 
 void test_train_split(float *data, float* labels, float *train, float *test, float *train_labels, float *test_labels, int len, int train_size, int test_size)
 {
+    long indexOne = train_size*784;
+    long indexTwo = train_size*10;
     memmove(train, data, sizeof(float)*train_size*784);
-    memmove(test, data+train_size, sizeof(float)*test_size*784);
-    memmove(train_labels, labels, sizeof(float)*train_size);
-    memmove(test_labels, labels+train_size, sizeof(float)*test_size);
+    memmove(test, data+indexOne, sizeof(float)*test_size*784);//<-here
+    memmove(train_labels, labels, sizeof(float)*train_size*10);
+    memmove(test_labels, labels+indexTwo, sizeof(float)*test_size*10);
 }

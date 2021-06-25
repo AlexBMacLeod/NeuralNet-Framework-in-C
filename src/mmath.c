@@ -20,13 +20,24 @@ Matrix* createInverse(Matrix* matrix)
 void matrixMultiplication(Matrix* A, Matrix* B, Matrix* C)
 {
     float sum;
+    int i, j, k;
     assert(A->shape.y == B->shape.x);
-    for (int i = 0; i < A->shape.x; i++) {
-        for (int j = 0; j < B->shape.y; j++) {
-            sum = 0;
-            for (int k = 0; k < A->shape.y; k++)
-                sum = sum + A->data[i * A->shape.y + k] * B->data[k * B->shape.y + j];
-            C->data[i * A->shape.y + j] = sum;
+    //Here we create our parallel loops, we specify that the variables A, B and C are shared between all threads where as
+    //i, j and k are private to each thread. This is fairly similar to basic matrix multiplication in
+    //CUDA where the matrices would be global and i, j, k local. The performance constraint there as well as here is how the
+    //matrices are accessed since C stores arrays in row major form, coalescing memory accesses but that will be done
+    //in the CUDA code, not here. Also CUDA allows the use of Shared memory and aggressive caching but these are also beyond
+    //the scope of the basic C code
+    #pragma omp parallel shared(A,B,C) private(i,j,k)
+    {
+        #pragma omp for schedule(static)
+        for (i = 0; i < A->shape.x; i++) {
+            for (j = 0; j < B->shape.y; j++) {
+                sum = 0;
+                for (k = 0; k < A->shape.y; k++)
+                    sum = sum + A->data[i * A->shape.y + k] * B->data[k * B->shape.y + j];
+                C->data[i * A->shape.y + j] = sum;
+            }
         }
     }
 }
@@ -35,29 +46,37 @@ void matrixVecMultiplication(Matrix* A, Matrix* b, Matrix* c)
 {
     assert(A->shape.y==b->shape.x);
     float sum;
-    for (int i = 0; i < A->shape.x; i++) 
+    int i, k;
+    #pragma omp parallel shared(A,b,c) private(i,k)
     {
-        sum = 0;
-        for (int k = 0; k < A->shape.y; k++)
-            sum += A->data[i * A->shape.y + k] * b->data[k];
-        c->data[i] = sum;
-        
+        #pragma omp for schedule(static)
+        for (i = 0; i < A->shape.x; i++) 
+        {
+            sum = 0;
+            for (k = 0; k < A->shape.y; k++)
+                sum += A->data[i * A->shape.y + k] * b->data[k];
+            c->data[i] = sum;
+        }
     }
-
 }
 
 void vecMatrixMultiplication(Matrix* a, Matrix* B, Matrix* c)
 {
     assert(a->shape.y==B->shape.x);
     float sum;
-    for(int j=0; j<B->shape.y; j++)
+    int j, k;
+    #pragma omp parallel shared(a,B,c) private(j,k)
     {
-        sum = 0;
-        for(int k=0; k<a->shape.y; k++)
+        #pragma omp for schedule(static)
+        for(j=0; j<B->shape.y; j++)
         {
-            sum += a->data[k] * B->data[k* B->shape.y + j];
+            sum = 0;
+            for(k=0; k<a->shape.y; k++)
+            {
+                sum += a->data[k] * B->data[k* B->shape.y + j];
+            }
+            c->data[j] = sum;
         }
-        c->data[j] = sum;
     }
 }
 

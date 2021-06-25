@@ -147,8 +147,8 @@ int validation_run(float *train, float *train_labels, int len, NeuralNet nn)
 	for(int i=0; i<1000; i++)
 	{
 		memmove(in, (train+(i*784)), sizeof(float)*784); 
-        nn.forward_pass(in, y_hat);
 		memmove(y, (train_labels+(i*10)), sizeof(float)*10);
+        nn.forward_pass(in, y_hat);
         correct_cnt += argmax(y_hat, y, 10);
 	}
 	free_all(y, in, y_hat);
