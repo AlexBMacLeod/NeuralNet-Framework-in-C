@@ -102,7 +102,7 @@ void delta(struct LinearLayer* layer, float* y)
     matrixMultiplication(layer->nextDelta, invWeights, layer->delta);
     invWeights->freeMem(invWeights);
     }
-    if(layer->actFunc!=none){
+    if(layer->derivFunc!=none){
         elemMatrixMultInPlace(layer->delta, layer->deriv);
     }
 }

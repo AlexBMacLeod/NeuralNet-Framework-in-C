@@ -14,7 +14,7 @@ int main(void)
     NeuralNet nn = createNetwork(.001f, 784, BATCH_SIZE);
     nn.add_linear_layer("relu", 512);
     nn.add_linear_layer("relu", 256);
-    nn.add_linear_layer("none", 10);
+    nn.add_linear_layer("softmax", 10);
     char file[] = "../data/train.csv";
 
     float *y_hat = calloc(10*BATCH_SIZE, sizeof(float));

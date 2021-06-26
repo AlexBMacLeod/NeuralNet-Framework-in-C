@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <math.h>
 
 #include "../include/activation_functions.h"
@@ -68,21 +69,22 @@ void tanhAct_deriv(LinearLayer* layer)
 
 void softMax(LinearLayer* layer)
 {
-    float tmp = 0.0;
+    float *tmp = calloc(layer->batch_size, sizeof(float));
     for(int i=0; i<layer->batch_size; i++)
     {
         for(int j=0; j<layer->out; j++)
         {
             layer->output->data[i*layer->out+j] = exp(layer->output->data[i*layer->out+j]);
-            tmp += layer->output->data[i*layer->out+j];
+            tmp[i] += layer->output->data[i*layer->out+j];
         }
     }
     for(int i=0; i<layer->batch_size; i++)
     {
         for(int j=0; j<layer->out; j++)
         {
-            layer->output->data[i*layer->out+j] = layer->output->data[i*layer->out+j]/tmp;
+            layer->output->data[i*layer->out+j] = layer->output->data[i*layer->out+j]/tmp[i];
         }
     }
+    free(tmp);
 }
 
