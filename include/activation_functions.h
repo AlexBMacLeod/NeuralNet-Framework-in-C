@@ -10,4 +10,11 @@ void relu_deriv(LinearLayer*);
 
 void none(LinearLayer*);
 
+void tanhAct(LinearLayer*);
+
+void tanhAct_deriv(LinearLayer*);
+
+void softMax(LinearLayer*);
+
+
 #endif

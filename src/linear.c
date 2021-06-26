@@ -65,6 +65,12 @@ LinearLayer* createLayer(char activation[], int in, int out, int batch_size)
     {
         layer->actFunc = relu;
         layer->derivFunc = relu_deriv;
+    }else if(strcmp(activation, "softmax")==0){
+        layer->actFunc = softMax;
+        layer->derivFunc = none;
+    }else if(strcmp(activation, "tanh")==0){
+        layer->actFunc = tanhAct;
+        layer->derivFunc = tanhAct_deriv;
     }else{
         layer->actFunc = none;
         layer->derivFunc = none;
@@ -94,8 +100,10 @@ void delta(struct LinearLayer* layer, float* y)
     }else{
     Matrix *invWeights = createInverse(layer->nextWeights);
     matrixMultiplication(layer->nextDelta, invWeights, layer->delta);
-    elemMatrixMultInPlace(layer->delta, layer->deriv);
     invWeights->freeMem(invWeights);
+    }
+    if(layer->actFunc!=none){
+        elemMatrixMultInPlace(layer->delta, layer->deriv);
     }
 }
 
