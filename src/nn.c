@@ -144,7 +144,7 @@ int validation_run(float *train, float *train_labels, int len, int batch_size, N
 	float *in = calloc(784*batch_size, sizeof(float));
 	float *y_hat = calloc(10*batch_size, sizeof(float));
 	float *y = calloc(10*batch_size, sizeof(float));
-	for(int i=0; i<floor(1000/batch_size); i++)
+	for(int i=0; i<floor(len/batch_size); i++)
 	{
 		memmove(in, (train+(i*784*batch_size)), sizeof(float)*784*batch_size); 
 		memmove(y, (train_labels+(i*10*batch_size)), sizeof(float)*10*batch_size);

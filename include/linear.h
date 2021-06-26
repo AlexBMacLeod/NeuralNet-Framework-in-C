@@ -32,10 +32,8 @@ typedef struct LinearLayer{
 
 
 /*
-The idea with layer is to encapsulate the data and funcitons needed within one struct. 
 Here we both store the information needed for each layer, as well as the functions
 to both create and destroy the layer, as well as to work with the data inside.
-While the end result doesn't include self like a python function might, it works well enough.
 An example for a forward pass for a layer named layer would be
 layer.forward_pass(&layer, input);
 The backward pass would then be:
