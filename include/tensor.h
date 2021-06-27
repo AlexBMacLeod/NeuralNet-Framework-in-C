@@ -12,7 +12,7 @@ typedef struct Matrix{
     void (*freeMem)( struct Matrix*);
 }Matrix;
 
-Matrix* createMatrix( int x, int y);
+Matrix* createMatrix( int, int x, int y, int z);
 
 
 #endif //TENSOR_H

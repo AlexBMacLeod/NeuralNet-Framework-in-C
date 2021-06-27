@@ -33,4 +33,12 @@ void vecElemMultiplication(Matrix*, Matrix*);
 
 void matrixScalarMultiplication(Matrix*, float);
 
+void nonpaddedConvolutionalKernel(Matrix*, Matrix*, Matrix*,int);
+/*
+So this is a bit of a beast but the basic idea is the same, we're sliding a kernel, or a number
+accross the image and storing the results into the output. The main complexity is that all
+the arrays are linearized which leads to nasty looking equations. The secondary complexity
+is correctly slicing the arrays, especially as they're indexed differently. Also I've inserted
+light threading to speed things up here, with a basic omp for loop.
+*/
 #endif

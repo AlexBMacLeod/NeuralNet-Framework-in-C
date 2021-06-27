@@ -3,7 +3,7 @@
 #define _SHAPE_H
 
 struct Shape {
-    int x, y;
+    int n, x, y, z;
 };
 
 #endif //_SHAPE_H

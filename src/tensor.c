@@ -26,15 +26,17 @@ static void input(Matrix* matrix, float* inMatrix)
     memcpy( matrix->data, inMatrix, sizeof(float)*matrix->shape.x*matrix->shape.y);
 }
 
-Matrix* createMatrix( int x, int y)
+Matrix* createMatrix( int n, int x, int y, int z)
 {
     Matrix* matrix = (Matrix*)malloc(sizeof(Matrix));
+    matrix->shape.n = n;
     matrix->shape.x = x;
     matrix->shape.y = y;
+    matrix->shape.z = z;
     matrix->giveMem = reallocateMem;
     matrix->freeMem = freeMatrix;
     matrix->inputData = input;
-    matrix->data = calloc(matrix->shape.x*matrix->shape.y, sizeof(float));
+    matrix->data = calloc(matrix->shape.n*matrix->shape.x*matrix->shape.y*matrix->shape.z, sizeof(float));
     return matrix;
 }
 

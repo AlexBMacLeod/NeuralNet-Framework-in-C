@@ -52,10 +52,10 @@ LinearLayer* createLayer(char activation[], int in, int out, int batch_size)
 {
     LinearLayer *layer = malloc(sizeof(LinearLayer));
 
-    layer->deriv = createMatrix( batch_size, out);
-    layer->weights = createMatrix( in, out);
-    layer->output = createMatrix( batch_size, out);
-    layer->delta = createMatrix( batch_size, out);
+    layer->deriv = createMatrix( batch_size, 1, out, 1);
+    layer->weights = createMatrix( 1, in, out, 1);
+    layer->output = createMatrix( batch_size, 1, out, 1);
+    layer->delta = createMatrix( batch_size, 1, out, 1);
 
     layer->batch_size = batch_size;
     layer->in = in;
@@ -111,7 +111,7 @@ void delta(struct LinearLayer* layer, float* y)
 void backward(struct LinearLayer* layer)
 {
     Matrix *invInput = createInverse(layer->input);
-    Matrix *weightsDelta = createMatrix(layer->in, layer->out);
+    Matrix *weightsDelta = createMatrix(1, layer->in, layer->out, 1);
     matrixMultiplication(invInput, layer->delta, weightsDelta);
     matrixScalarMultiplication(weightsDelta, layer->lr);
     matrixSubtraction(layer->weights, weightsDelta);

@@ -15,12 +15,14 @@ typedef struct conv2DLayer{
     Matrix *delta;
     Matrix *nextDelta;
     Matrix *nextWeights;
+    Matrix *kernels;
     float lr;
     bool padding;
     int kernel_size;
     int batch_size;
-    Shape in;
-    Shape out;
+    int stride;
+    struct Shape in;
+    struct Shape out;
     void (*actFunc)(struct conv2DLayer*);
     void (*derivFunc)(struct conv2DLayer*);
     void (*forward_pass)(struct conv2DLayer*);
@@ -34,17 +36,14 @@ void makeWeights( Matrix*);
 
 float* makeKernels(int, int, int);
 
-void freeLayer(conv2DLayer*);
+void freeConv2DLayer(conv2DLayer*);
 
-//void initLinear( layer*, int, int, activation *funcs);
-void initLayer( conv2DLayer**, char[], int, int, bool);
+conv2DLayer* createConv2DLayer(char[], struct Shape, int, int, int, int, int, int, bool);
 
-conv2DLayer* createConv2DLayer(char[], Shape, int, int, bool);
-
-void forward( conv2DLayer*);
+void forwardConv2D( conv2DLayer*);
 //
-void backward( conv2DLayer*);
+void backwardConv2D( conv2DLayer*);
 
-void delta(conv2DLayer*, float*);
+void deltaConv2D(conv2DLayer*, float*);
 
 #endif //_CONV2D_H
