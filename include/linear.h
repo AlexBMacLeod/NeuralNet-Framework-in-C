@@ -5,6 +5,7 @@
 #define _LINEAR_H
 
 #include "tensor.h"
+#include "shape.h"
 //#include "activation_functions.h"
 
 
@@ -19,7 +20,8 @@ typedef struct LinearLayer{
     Matrix *nextWeights;
     float lr;
     int batch_size;
-    int in;
+    int flat;
+    struct Shape in;
     int out;
     void (*actFunc)(struct LinearLayer*);
     void (*derivFunc)(struct LinearLayer*);
@@ -28,8 +30,6 @@ typedef struct LinearLayer{
     void (*backward_delta)(struct LinearLayer*, float*);
     void (*free_layer)(struct LinearLayer*);
 } LinearLayer;
-
-
 
 /*
 Here we both store the information needed for each layer, as well as the functions
@@ -47,7 +47,7 @@ void freeLayer(LinearLayer*);
 //void initLinear( layer*, int, int, activation *funcs);
 void initLayer( LinearLayer**, char[], int, int);
 
-LinearLayer* createLayer(char[], int, int, int);
+LinearLayer* createLayer(char[], struct Shape, int, int);
 
 void forward( LinearLayer*);
 //

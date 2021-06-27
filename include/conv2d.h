@@ -8,7 +8,6 @@
 
 
 typedef struct conv2DLayer{
-    Matrix *weights;
     Matrix *output;
     Matrix *deriv;
     Matrix *input;
@@ -32,13 +31,13 @@ typedef struct conv2DLayer{
 } conv2DLayer;
 
 
-void makeWeights( Matrix*);
+void makeKernelWeights( Matrix*);
 
 float* makeKernels(int, int, int);
 
 void freeConv2DLayer(conv2DLayer*);
 
-conv2DLayer* createConv2DLayer(char[], struct Shape, int, int, int, int, int, int, bool);
+conv2DLayer* createConv2DLayer(char[], struct Shape, int, int, int, int, bool);
 
 void forwardConv2D( conv2DLayer*);
 //

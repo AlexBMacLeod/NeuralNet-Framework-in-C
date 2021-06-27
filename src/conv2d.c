@@ -9,10 +9,10 @@
 #include "../include/mmath.h"
 //#include "../include/shape.h"
 
-conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, int in_channels, int out_channels, int out, int batch_size, int kernel_size, bool padding)
+conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, int in_channels, int out_channels, int kernel_size, bool padding)
 {
     conv2DLayer *layer = malloc(sizeof(conv2DLayer));
-
+    int batch_size = in.n;
     if(padding){
         layer->output = createMatrix( batch_size, in.x, in.y, out_channels);
         layer->deriv = createMatrix( batch_size, in.x, in.y, out_channels);
@@ -22,7 +22,7 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
         layer->output = createMatrix( batch_size, (in.x-kernel_size+1), (in.y-kernel_size+1), out_channels);
         layer->deriv = createMatrix( batch_size, (in.x-kernel_size+1), (in.y-kernel_size+1), out_channels);
     }
-    layer->delta = createMatrix( batch_size, 1, out, 1);
+    //layer->delta = createMatrix( batch_size, , out, 1);
     layer->kernels = createMatrix(1, in_channels, kernel_size*kernel_size, out_channels);
 
     assert(floor(kernel_size/2)!=ceil(kernel_size/2));
@@ -31,25 +31,22 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
     layer->batch_size = batch_size;
     layer->in = in;
     layer->stride = stride;
-    if(layer->padding) {layer->out.x = layer->in.x; layer->out.y=layer->in.y;
-    }else{ layer->out.x = layer->in.x - (layer->kernel_size - 1);
-        layer->out.y = layer->in.y - (layer->kernel_size - 1);
+    if(layer->padding) {layer->out.n=in.n;layer->out.x=layer->in.x;layer->out.y=layer->in.y;layer->out.z=out_channels;
+    }else{ layer->out.x = (layer->in.x - (layer->kernel_size - 1))/layer->stride;
+        layer->out.y = (layer->in.y - (layer->kernel_size - 1))/layer->stride;
     }
 
     makeWeights( layer->kernels);
     if(strcmp(activation, "relu") == 0)
     {
-        layer->actFunc = relu;
-        layer->derivFunc = relu_deriv;
-    }else if(strcmp(activation, "softmax")==0){
-        layer->actFunc = softMax;
-        layer->derivFunc = none;
+        layer->actFunc = relu2C;
+        layer->derivFunc = relu_deriv2C;
     }else if(strcmp(activation, "tanh")==0){
-        layer->actFunc = tanhAct;
-        layer->derivFunc = tanhAct_deriv;
+        layer->actFunc = tanhAct2C;
+        layer->derivFunc = tanhAct_deriv2C;
     }else{
-        layer->actFunc = none;
-        layer->derivFunc = none;
+        layer->actFunc = none2C;
+        layer->derivFunc = none2C;
     }
 
     layer->free_layer = freeLayer;
@@ -61,7 +58,7 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
     return layer;
 }
 
-void makeWeights( Matrix* matrix)
+void makeKernelWeights( Matrix* matrix)
 {
     srand(time(NULL));
     for(int i = 0; i < matrix->shape.x; i++)

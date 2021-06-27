@@ -16,6 +16,15 @@ void relu(LinearLayer* layer)
     }
 }
 
+void relu2C(conv2DLayer* layer)
+{
+    int len=layer->output->shape.n*layer->output->shape.x*layer->output->shape.y*layer->output->shape.z;
+    for(int i=0; len; i++)
+    {
+        if(layer->output->data[i]<0) layer->output->data[i] = 0.0f;
+    }
+}
+
 void relu_deriv(LinearLayer* layer)
 {
     for(int i=0; i<layer->batch_size; i++)
@@ -31,20 +40,48 @@ void relu_deriv(LinearLayer* layer)
         }
     }
 }
+
+void relu_deriv2C(conv2DLayer* layer)
+{
+    int len=layer->output->shape.n*layer->output->shape.x*layer->output->shape.y*layer->output->shape.z;
+    for(int i=0; i<len; i++)
+    {
+        if(layer->output->data[i]>0)
+        {
+            layer->deriv->data[i] = 1.0f;
+        }else{
+            layer->deriv->data[i] = 0.0f;
+        }
+    }
+}
 void none(LinearLayer* layer)
 {
     return;
-}/*
-def tanh(x):
-    return np.tanh(x)
+}
 
-def tanh2deriv(output):
-    return 1 - (output ** 2)
+void none2C(conv2DLayer* layer)
+{
+    return;
+}
 
-def softmax(x):
-    temp = np.exp(x)
-    return temp / np.sum(temp, axis=1, keepdims=True)
-    */
+void tanhAct2C(conv2DLayer* layer)
+{
+    int len=layer->output->shape.n*layer->output->shape.x*layer->output->shape.y*layer->output->shape.z;
+    for(int i=0; i<len; i++)
+    {
+        layer->output->data[i] = tanh(layer->output->data[i]);
+    }
+}
+
+void tanhAct_deriv2C(conv2DLayer* layer)
+{
+    int len=layer->output->shape.n*layer->output->shape.x*layer->output->shape.y*layer->output->shape.z;
+    for(int i=0; i<len; i++)
+    {
+        layer->deriv->data[i] = 1-pow(layer->output->data[i],2);
+    }
+}
+
 void tanhAct(LinearLayer* layer)
 {
     for(int i=0; i<layer->batch_size; i++)
