@@ -45,4 +45,6 @@ void backwardConv2D( conv2DLayer*);
 
 void deltaConv2D(conv2DLayer*, float*);
 
+void freeConv(conv2DLayer*);
+
 #endif //_CONV2D_H

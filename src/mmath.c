@@ -160,9 +160,9 @@ void elemMatrixMultInPlace(Matrix* A, Matrix* B)
 void nonpaddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int stride)
 {
     assert(in->shape.n==out->shape.n);
-    assert(ceil(kernel->shape.z/2)!=floor(kernel->shape.z/2));
-    assert(((in->shape.x+kernel->shape.x-1))/stride==out->shape.x);
-    assert((in->shape.y+kernel->shape.y-1)/stride==out->shape.y);
+    assert(ceil(kernel->shape.x/2.0f)!=floor(kernel->shape.x/2.0f));
+    assert(((in->shape.x-kernel->shape.x+1))/stride==out->shape.x);
+    assert((in->shape.y-kernel->shape.y+1)/stride==out->shape.y);
     assert(kernel->shape.z==out->shape.z);
     memset(out->data, 0, sizeof(float)*out->shape.n*out->shape.x*out->shape.y*out->shape.z);
     float sum=0;
@@ -204,3 +204,45 @@ void nonpaddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int s
     }
 }
 
+void paddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int stride)
+{
+    assert(in->shape.n==out->shape.n);
+    assert(ceil(kernel->shape.x/2.0f)!=floor(kernel->shape.x/2.0f));
+    assert((in->shape.x)/stride==out->shape.x);
+    assert((in->shape.y)/stride==out->shape.y);
+    assert(kernel->shape.z==out->shape.z);
+    memset(out->data, 0, sizeof(float)*out->shape.n*out->shape.x*out->shape.y*out->shape.z);
+    float sum=0;
+    int pad = (kernel->shape.x-1)/2;
+    int l, i, j, k, m, n, p;
+    for(l=0; l<in->shape.n; l++)
+    {
+        for(i=0; i<out->shape.x; i+=stride)
+        {
+            for(j=0; j<out->shape.y;j+=stride)
+            {
+                for(p=0; p<out->shape.z; p++)
+                {
+                    for(m=0; m<kernel->shape.x; m++)
+                    {
+                        for(n=0; n<kernel->shape.y; n++)
+                        {
+                            for(k=0; k<in->shape.z; k++)
+                            {
+                                if(((i-pad)>=0) && ((i+pad)<out->shape.x) && ((j-pad)>=0) && ((j+pad)<out->shape.y))
+                                {
+                                    sum+=kernel->data[(p*kernel->shape.x+m)*kernel->shape.y+n] *
+                                    in->data[((l*(out->shape.x-pad+m)+i)*(out->shape.y-pad+n)+j)*in->shape.z+k];
+                                }else{
+                                    sum+=0;
+                                }
+                            }
+                        }
+                    }
+                    out->data[((l*(out->shape.x)+i)*(out->shape.y)+j)*out->shape.z+p] = sum;
+                    sum=0;
+                }
+            }
+        }
+    }
+}

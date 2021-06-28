@@ -9,8 +9,10 @@ struct Node  {
 	struct Node* next;
 	struct Node* prev;
 	char layerType[20];
-    LinearLayer *layer;
-	conv2DLayer *convLayer;
+	union{
+    	LinearLayer *layer;
+		conv2DLayer *convLayer;
+	};
 };
 
 typedef struct NeuralNet{

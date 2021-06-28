@@ -20,7 +20,6 @@ struct Node* GetNewNode(char activation[], int in, int out, int batch_size) {
 	strncpy(newNode->layerType, "linear", 20);
 	newNode->prev = NULL;
 	newNode->next = NULL;
-	newNode->convLayer = NULL;
 	return newNode;
 }
 
@@ -32,7 +31,6 @@ struct Node* GetConvNode(char activation[], struct Shape in, int in_channels, in
 	strncpy(newNode->layerType, "conv2d", 20);
 	newNode->prev = NULL;
 	newNode->next = NULL;
-	newNode->layer = NULL;
 	return newNode;
 }
 

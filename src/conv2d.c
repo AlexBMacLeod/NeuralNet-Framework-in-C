@@ -14,16 +14,16 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
     conv2DLayer *layer = malloc(sizeof(conv2DLayer));
     int batch_size = in.n;
     if(padding){
-        layer->output = createMatrix( batch_size, in.x, in.y, out_channels);
-        layer->deriv = createMatrix( batch_size, in.x, in.y, out_channels);
+        layer->output = createMatrix( batch_size, floor(in.x/stride), floor(in.y/stride), out_channels);
+        layer->deriv = createMatrix( batch_size, floor(in.x/stride), floor(in.y/stride), out_channels);
     }else{
         assert((in.x-kernel_size+1)>0);
         assert((in.y-kernel_size+1)>0);
-        layer->output = createMatrix( batch_size, (in.x-kernel_size+1), (in.y-kernel_size+1), out_channels);
-        layer->deriv = createMatrix( batch_size, (in.x-kernel_size+1), (in.y-kernel_size+1), out_channels);
+        layer->output = createMatrix( batch_size, floor((in.x-kernel_size+1)/stride), floor((in.y-kernel_size+1)/stride), out_channels);
+        layer->deriv = createMatrix( batch_size, floor((in.x-kernel_size+1)/stride), floor((in.y-kernel_size+1)/stride), out_channels);
     }
     //layer->delta = createMatrix( batch_size, , out, 1);
-    layer->kernels = createMatrix(1, in_channels, kernel_size*kernel_size, out_channels);
+    layer->kernels = createMatrix(1, kernel_size, kernel_size, out_channels);
 
     assert(floor(kernel_size/2)!=ceil(kernel_size/2));
     layer->kernel_size = kernel_size;
@@ -36,7 +36,7 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
         layer->out.y = (layer->in.y - (layer->kernel_size - 1))/layer->stride;
     }
 
-    makeWeights( layer->kernels);
+    makeKernelWeights( layer->kernels);
     if(strcmp(activation, "relu") == 0)
     {
         layer->actFunc = relu2C;
@@ -49,9 +49,9 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
         layer->derivFunc = none2C;
     }
 
-    layer->free_layer = freeLayer;
-    layer->forward_pass = forward;
-    layer->backward_weights = backward;
+    layer->free_layer = freeConv2DLayer;
+    layer->forward_pass = forwardConv2D;
+    layer->backward_weights = backwardConv2D;
     layer->backward_delta = delta;
     layer->nextDelta = NULL;
     layer->nextWeights = NULL;
@@ -91,9 +91,24 @@ void addPadding(Matrix *img, int kernel_size)
         }
 }
 
-void forwardConv2DZeroPadding( conv2DLayer* layer)
+void forwardConv2D( conv2DLayer* layer)
 {
-    nonpaddedConvolutionalKernel(layer->input, layer->kernels, layer->output,layer->stride);
+    if(layer->padding) paddedConvolutionalKernel(layer->input, layer->kernels, layer->output,layer->stride);
+    else nonpaddedConvolutionalKernel(layer->input, layer->kernels, layer->output,layer->stride);
     layer->actFunc(layer);
     layer->derivFunc(layer);
+}
+
+void backwardConv2D( conv2DLayer* layer)
+{
+
+}
+
+void freeConv(conv2DLayer* layer)
+{
+    layer->kernels->freeMem(layer->kernels);
+    layer->output->freeMem(layer->output);
+    layer->deriv->freeMem(layer->deriv);
+    layer->delta->freeMem(layer->delta);
+    free(layer);
 }

@@ -41,4 +41,8 @@ the arrays are linearized which leads to nasty looking equations. The secondary 
 is correctly slicing the arrays, especially as they're indexed differently. Also I've inserted
 light threading to speed things up here, with a basic omp for loop.
 */
+
+void paddedConvolutionalKernel(Matrix*, Matrix*, Matrix*,int);
+//I could mix the padded and non padded kernels together, but from a readability stand point, I'm not sure if it makes sense.
+
 #endif
