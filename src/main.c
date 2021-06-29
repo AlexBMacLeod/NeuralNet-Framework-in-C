@@ -11,7 +11,7 @@
 
 int main(void)
 {
-    NeuralNet nn = createNetwork(.001f, 784, BATCH_SIZE);
+    NeuralNet nn = createNetwork(.001f, BATCH_SIZE, 28, 28, 1);
     nn.add_linear_layer("relu", 512);
     nn.add_linear_layer("relu", 256);
     nn.add_linear_layer("softmax", 10);

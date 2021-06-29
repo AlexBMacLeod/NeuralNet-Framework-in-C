@@ -17,7 +17,7 @@ struct Node  {
 
 typedef struct NeuralNet{
 	void (*add_linear_layer)(char[], int);
-	void (*add_convolutional_layer)(char[], int, int, int);
+	void (*add_convolutional_layer)(char *, int,  int,  int,  int,  bool);
 	void (*forward_pass)(float*, float*);
 	void (*backward_pass)(float*);
 	void (*clean_up)();

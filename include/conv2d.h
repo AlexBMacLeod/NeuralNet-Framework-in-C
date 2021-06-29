@@ -42,9 +42,11 @@ conv2DLayer* createConv2DLayer(char[], struct Shape, int, int, int, int, bool);
 
 void forwardConv2D( conv2DLayer*);
 //
-void backwardConv2D( conv2DLayer*);
+void backwardConv2D( conv2DLayer*, float*);
 
 void deltaConv2D(conv2DLayer*, float*);
+
+void weightUpdate( conv2DLayer*);
 
 void freeConv(conv2DLayer*);
 

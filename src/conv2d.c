@@ -3,6 +3,7 @@
 #include <math.h>
 #include <time.h>
 #include <assert.h>
+#include <string.h>
 
 #include "../include/conv2d.h"
 #include "../include/activation_functions.h"
@@ -39,11 +40,11 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
     }
 
     makeKernelWeights( layer->kernels);
-    if(strcmp(activation, "relu") == 0)
+    if(strncmp(activation, "relu", 5) == 0)
     {
         layer->actFunc = relu2C;
         layer->derivFunc = relu_deriv2C;
-    }else if(strcmp(activation, "tanh")==0){
+    }else if(strncmp(activation, "tanh", 5)==0){
         layer->actFunc = tanhAct2C;
         layer->derivFunc = tanhAct_deriv2C;
     }else{
@@ -108,7 +109,7 @@ void weightUpdate( conv2DLayer* layer)
     for(int i=0;i<len;i++) layer->kernels->data[i] += layer->dK->data[i] * layer->lr;
 }
 
-void backwardConv2D( conv2DLayer* layer)
+void backwardConv2D( conv2DLayer* layer, float *y)
 {
     memset(layer->delta->data, 0, layer->out.n*layer->out.x*layer->out.y*layer->out.z*sizeof(float));
     elemMatrixMultInPlace(layer->deriv, layer->kernels);

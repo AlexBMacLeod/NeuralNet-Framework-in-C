@@ -43,7 +43,7 @@ struct Node* GetFirstNode(float lr, struct Shape output) {
 	int out = output.x * output.y * output.z;
 	int batch_size = output.n;
 	newNode->layer = createLayer("none", input, out, batch_size);
-	newNode->layer->output->shape =output;
+	newNode->layer->in =output;
 	strncpy(newNode->layerType, "linear", 20);
 	newNode->prev = NULL;
 	newNode->next = NULL;
@@ -73,6 +73,9 @@ void InsertAtHead(char activation[], int out) {
 	}else if(strncmp(head->layerType, "conv2d", 7)==0){
 		int flatten = head->convLayer->out.x*head->convLayer->out.y*head->convLayer->out.z;
 		newNode = GetNewNode(activation, flatten, out, head->convLayer->batch_size);
+	}else{
+		fprintf(stderr, "Could not find layerType %s", head->layerType);
+		exit(1);
 	}
 	head->prev = newNode;
 	newNode->next = head;
@@ -94,9 +97,12 @@ void InsertC2DAtHead(char activation[], int in_channels, int out_channels, int s
 {
 	struct Node* newNode;
 	if(strncmp(head->layerType, "linear", 7)==0){
-		newNode = GetConvNode(activation, head->layer->output->shape, in_channels, out_channels, stride, kernel_size, padding);
+		newNode = GetConvNode(activation, head->layer->in, in_channels, out_channels, stride, kernel_size, padding);
 	}else if(strncmp(head->layerType, "conv2d", 7)==0){
 		newNode = GetConvNode(activation, head->convLayer->out, in_channels, out_channels, stride, kernel_size, padding);
+	}else{
+		fprintf(stderr, "Could not find layerType %s", head->layerType);
+		exit(1);
 	}
 	head->prev = newNode;
 	newNode->next = head;
@@ -113,21 +119,6 @@ void InsertC2DAtHead(char activation[], int in_channels, int out_channels, int s
 	}
 	head = newNode;
 }
-
-//Inserts a Node at tail of Doubly linked list
-void InsertAtTail(char activation[], int in, int out, int batch_size) {
-	struct Node* temp = head;
-	struct Node* newNode = GetNewNode(activation, in, out, batch_size);
-	if(head == NULL) {
-		head = newNode;
-		return;
-	}
-	while(temp->next != NULL) temp = temp->next; // Go To last Node
-	temp->next = newNode;
-	newNode->prev = temp;
-}
-
-
 
 void Backward(float *y) {
 	struct Node* temp = head;
