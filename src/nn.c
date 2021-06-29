@@ -132,12 +132,20 @@ void InsertAtTail(char activation[], int in, int out, int batch_size) {
 void Backward(float *y) {
 	struct Node* temp = head;
 	while(temp->next != NULL) {
-		temp->layer->backward_delta(temp->layer, y);
+		if(strncmp(temp->layerType, "linear", 7)==0){
+        	temp->layer->backward_delta(temp->layer, y);
+		}else if(strncmp(temp->layerType, "conv2d", 7)==0){
+			temp->convLayer->backward_delta(temp->convLayer, y);
+		}
 		temp = temp->next;
 	}
 	temp = head;
 	while(temp->next != NULL) {
-		temp->layer->backward_weights(temp->layer);
+		if(strncmp(temp->layerType, "linear", 7)==0){
+        	temp->layer->backward_weights(temp->layer);
+		}else if(strncmp(temp->layerType, "conv2d", 7)==0){
+			temp->convLayer->backward_weights(temp->convLayer);
+		}
 		temp = temp->next;
 	}
 }
@@ -178,9 +186,11 @@ void Delete() {
 	}
 	while(temp != NULL) {
 		prev = temp->prev;
-        //if(prev==NULL) temp->layer->input->freeMem(temp->layer->input);
-		if(temp->layer!=NULL) temp->layer->free_layer(temp->layer);
-		if(temp->convLayer!=NULL) temp->convLayer->free_layer(temp->convLayer);
+		if(strncmp(temp->layerType, "linear", 7)==0){
+        	temp->layer->free_layer(temp->layer);
+		}else if(strncmp(temp->layerType, "conv2d", 7)==0){
+			temp->convLayer->free_layer(temp->convLayer);
+		}
         free(temp);
         temp = prev;
 	}

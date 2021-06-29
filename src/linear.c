@@ -115,7 +115,7 @@ void backward(struct LinearLayer* layer)
     Matrix *invInput = createInverse(layer->input);
     Matrix *weightsDelta = createMatrix(1, layer->flat, layer->out, 1);
     matrixMultiplication(invInput, layer->delta, weightsDelta);
-    matrixScalarMultiplication(weightsDelta, layer->lr);
+    matrixScalarMultiplicationInPlace(weightsDelta, layer->lr);
     matrixSubtraction(layer->weights, weightsDelta);
     weightsDelta->freeMem(weightsDelta);
     invInput->freeMem(invInput);

@@ -12,6 +12,7 @@
 conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, int in_channels, int out_channels, int kernel_size, bool padding)
 {
     conv2DLayer *layer = malloc(sizeof(conv2DLayer));
+    assert(floor(kernel_size/2)!=ceil(kernel_size/2));
     int batch_size = in.n;
     if(padding){
         layer->output = createMatrix( batch_size, floor(in.x/stride), floor(in.y/stride), out_channels);
@@ -23,9 +24,10 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
         layer->deriv = createMatrix( batch_size, floor((in.x-kernel_size+1)/stride), floor((in.y-kernel_size+1)/stride), out_channels);
     }
     //layer->delta = createMatrix( batch_size, , out, 1);
-    layer->kernels = createMatrix(1, kernel_size, kernel_size, out_channels);
+    layer->kernels = createMatrix(out_channels, kernel_size, kernel_size, in_channels);
+    layer->dK = createMatrix(out_channels, kernel_size, kernel_size, in_channels);
 
-    assert(floor(kernel_size/2)!=ceil(kernel_size/2));
+    
     layer->kernel_size = kernel_size;
     layer->padding = padding;
     layer->batch_size = batch_size;
@@ -51,8 +53,9 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
 
     layer->free_layer = freeConv2DLayer;
     layer->forward_pass = forwardConv2D;
-    layer->backward_weights = backwardConv2D;
-    layer->backward_delta = delta;
+    layer->backward_weights = weightUpdate;
+    layer->backward_delta = backwardConv2D;
+    layer->input=NULL;
     layer->nextDelta = NULL;
     layer->nextWeights = NULL;
     return layer;
@@ -99,10 +102,48 @@ void forwardConv2D( conv2DLayer* layer)
     layer->derivFunc(layer);
 }
 
+void weightUpdate( conv2DLayer* layer)
+{
+    int len = layer->kernels->shape.n*layer->kernels->shape.y*layer->kernels->shape.x*layer->kernels->shape.z;
+    for(int i=0;i<len;i++) layer->kernels->data[i] += layer->dK->data[i] * layer->lr;
+}
+
 void backwardConv2D( conv2DLayer* layer)
 {
+    memset(layer->delta->data, 0, layer->out.n*layer->out.x*layer->out.y*layer->out.z*sizeof(float));
+    elemMatrixMultInPlace(layer->deriv, layer->kernels);
+    int pad = (layer->kernels->shape.x-1)/2;
+    for(int i=0; i<layer->out.n; i++)
+    {
+        for(int j=0;j<layer->out.x;j++)
+        {
+            for(int k=0;k<layer->out.y;k++)
+            {
+                for(int m=0;m<layer->kernels->shape.x;m++)
+                {
+                    for(int n=0;n<layer->kernels->shape.y;n++)
+                    {
+                        for(int l=0;l<layer->in.z;l++)
+                        {
+                            for(int p=0;p<layer->out.z;p++)
+                            {
+                                if((j-pad)>=0 && (j+pad)<layer->out.x && (k-pad)>=0 && (k+pad)<layer->out.y){
+                                layer->delta->data[((i*layer->out.x+(j-pad+m))*layer->out.y+(k-pad+n))*layer->in.z+l]
+                                += layer->kernels->data[((l*layer->kernels->shape.x+m)*layer->kernels->shape.y+n)*layer->out.z+p]
+                                * layer->nextDelta->data[((i*layer->out.x+j)*layer->out.y+k)*layer->out.z+p];
 
+                                layer->dK->data[((l*layer->kernels->shape.x+m)*layer->kernels->shape.y+n)*layer->out.z+p]
+                                += layer->nextDelta->data[((i*layer->out.x+j)*layer->out.y+k)*layer->in.z+l]
+                                * layer->input->data[((i*layer->out.x+(j-pad+m))*layer->out.y+(k-pad+n))*layer->in.z+l];}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
+
 
 void freeConv(conv2DLayer* layer)
 {
@@ -110,5 +151,6 @@ void freeConv(conv2DLayer* layer)
     layer->output->freeMem(layer->output);
     layer->deriv->freeMem(layer->deriv);
     layer->delta->freeMem(layer->delta);
+    layer->dK->freeMem(layer->dK);
     free(layer);
 }

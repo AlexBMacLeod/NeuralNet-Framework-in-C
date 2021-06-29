@@ -31,7 +31,9 @@ void vecVecMultiplication(Matrix*, Matrix*, Matrix*);
 
 void vecElemMultiplication(Matrix*, Matrix*);
 
-void matrixScalarMultiplication(Matrix*, float);
+void matrixScalarMultiplication(Matrix*, float*, float);
+
+void matrixScalarMultiplicationInPlace(Matrix*, float);
 
 void nonpaddedConvolutionalKernel(Matrix*, Matrix*, Matrix*,int);
 /*

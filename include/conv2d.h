@@ -15,6 +15,7 @@ typedef struct conv2DLayer{
     Matrix *nextDelta;
     Matrix *nextWeights;
     Matrix *kernels;
+    Matrix *dK;
     float lr;
     bool padding;
     int kernel_size;

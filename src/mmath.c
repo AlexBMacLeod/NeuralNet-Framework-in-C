@@ -129,7 +129,7 @@ void vecElemMultiplication(Matrix* a, Matrix* b)
     
 }
 
-void matrixScalarMultiplication(Matrix* A, float sc)
+void matrixScalarMultiplicationInPlace(Matrix* A, float sc)
 {
     for(int i=0; i<A->shape.x; i++)
     {
@@ -191,7 +191,7 @@ void nonpaddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int s
                         {
                             for(k=0; k<in->shape.z; k++)
                             {
-                                sum+=kernel->data[(p*kernel->shape.x+m)*kernel->shape.y+n] *
+                                sum+=kernel->data[((p*kernel->shape.x+m)*kernel->shape.y+n)*in->shape.z+k] *
                                 in->data[((l*(out->shape.x-pad+m)+i)*(out->shape.y-pad+n)+j)*in->shape.z+k];
                             }
                         }
@@ -231,7 +231,7 @@ void paddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int stri
                             {
                                 if(((i-pad)>=0) && ((i+pad)<out->shape.x) && ((j-pad)>=0) && ((j+pad)<out->shape.y))
                                 {
-                                    sum+=kernel->data[(p*kernel->shape.x+m)*kernel->shape.y+n] *
+                                    sum+=kernel->data[((p*kernel->shape.x+m)*kernel->shape.y+n)*in->shape.z+k] *
                                     in->data[((l*(out->shape.x-pad+m)+i)*(out->shape.y-pad+n)+j)*in->shape.z+k];
                                 }else{
                                     sum+=0;
@@ -243,6 +243,17 @@ void paddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int stri
                     sum=0;
                 }
             }
+        }
+    }
+}
+
+void matrixScalarMultiplication(Matrix* A, float *out, float sc)
+{
+    for(int i=0; i<A->shape.x; i++)
+    {
+        for(int j=0; j<A->shape.y; j++)
+        {
+            out[i*A->shape.y+j] = A->data[i*A->shape.y+j] * sc;
         }
     }
 }
