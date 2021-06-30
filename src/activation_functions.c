@@ -19,7 +19,7 @@ void relu(LinearLayer* layer)
 void relu2C(conv2DLayer* layer)
 {
     int len=layer->output->shape.n*layer->output->shape.x*layer->output->shape.y*layer->output->shape.z;
-    for(int i=0; len; i++)
+    for(int i=0; i<len; i++)
     {
         if(layer->output->data[i]<0) layer->output->data[i] = 0.0f;
     }

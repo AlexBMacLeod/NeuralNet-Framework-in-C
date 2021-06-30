@@ -12,6 +12,8 @@
 int main(void)
 {
     NeuralNet nn = createNetwork(.001f, BATCH_SIZE, 28, 28, 1);
+    nn.add_convolutional_layer("relu", 1, 32, 5, 1, true);
+    nn.add_convolutional_layer("relu", 32, 64, 5, 1, true);
     nn.add_linear_layer("relu", 512);
     nn.add_linear_layer("relu", 256);
     nn.add_linear_layer("softmax", 10);

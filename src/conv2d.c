@@ -13,7 +13,7 @@
 conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, int in_channels, int out_channels, int kernel_size, bool padding)
 {
     conv2DLayer *layer = malloc(sizeof(conv2DLayer));
-    assert(floor(kernel_size/2)!=ceil(kernel_size/2));
+    assert(floor((float)kernel_size/2.0f)!=ceil((float)kernel_size/2.0f));
     int batch_size = in.n;
     if(padding){
         layer->output = createMatrix( batch_size, floor(in.x/stride), floor(in.y/stride), out_channels);
@@ -25,8 +25,8 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
         layer->deriv = createMatrix( batch_size, floor((in.x-kernel_size+1)/stride), floor((in.y-kernel_size+1)/stride), out_channels);
     }
     //layer->delta = createMatrix( batch_size, , out, 1);
-    layer->kernels = createMatrix(out_channels, kernel_size, kernel_size, in_channels);
-    layer->dK = createMatrix(out_channels, kernel_size, kernel_size, in_channels);
+    layer->kernels = createMatrix(in_channels, kernel_size, kernel_size, out_channels);
+    layer->dK = createMatrix(in_channels, kernel_size, kernel_size, out_channels);
 
     
     layer->kernel_size = kernel_size;
@@ -52,7 +52,7 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
         layer->derivFunc = none2C;
     }
 
-    layer->free_layer = freeConv2DLayer;
+    layer->free_layer = freeConv;
     layer->forward_pass = forwardConv2D;
     layer->backward_weights = weightUpdate;
     layer->backward_delta = backwardConv2D;
@@ -65,15 +65,9 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
 void makeKernelWeights( Matrix* matrix)
 {
     srand(time(NULL));
-    for(int i = 0; i < matrix->shape.x; i++)
-    {
-        for(int j = 0; j < matrix->shape.y; j++)
-        {
-            for(int k=0; k<matrix->shape.z; k++)
-            {
-                matrix->data[(i*matrix->shape.y+j)*matrix->shape.z+k] = .2f*(((float)rand()/(float)(RAND_MAX)))-.1f;
-            }
-        }
+    int len = matrix->shape.n*matrix->shape.x*matrix->shape.y*matrix->shape.z;
+    for(int i=0; i<len; i++){
+        matrix->data[i] = .2f*(((float)rand()/(float)(RAND_MAX)))-.1f;
     }
 }
 
@@ -97,7 +91,9 @@ void addPadding(Matrix *img, int kernel_size)
 
 void forwardConv2D( conv2DLayer* layer)
 {
-    if(layer->padding) paddedConvolutionalKernel(layer->input, layer->kernels, layer->output,layer->stride);
+    if(layer->padding){ 
+        paddedConvolutionalKernel(layer->input, layer->kernels, layer->output,layer->stride);
+    }
     else nonpaddedConvolutionalKernel(layer->input, layer->kernels, layer->output,layer->stride);
     layer->actFunc(layer);
     layer->derivFunc(layer);

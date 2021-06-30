@@ -36,8 +36,6 @@ void makeKernelWeights( Matrix*);
 
 float* makeKernels(int, int, int);
 
-void freeConv2DLayer(conv2DLayer*);
-
 conv2DLayer* createConv2DLayer(char[], struct Shape, int, int, int, int, bool);
 
 void forwardConv2D( conv2DLayer*);

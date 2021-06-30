@@ -24,7 +24,7 @@ struct Node* GetNewNode(char activation[], int in, int out, int batch_size) {
 }
 
 //Convolutional node
-struct Node* GetConvNode(char activation[], struct Shape in, int in_channels, int out_channels, int stride, int kernel_size, bool padding) {
+struct Node* GetConvNode(char activation[], struct Shape in, int in_channels, int out_channels, int kernel_size, int stride, bool padding) {
 	struct Node* newNode
 		= (struct Node*)malloc(sizeof(struct Node));
 	newNode->convLayer = createConv2DLayer(activation, in, stride, in_channels, out_channels, kernel_size, padding);
@@ -36,18 +36,13 @@ struct Node* GetConvNode(char activation[], struct Shape in, int in_channels, in
 
 //With this one we set up an input layer, we define the learning rate
 //and then set up a vector for the input to be placed into
-struct Node* GetFirstNode(float lr, struct Shape output) {
+struct Node* GetInput(float lr, struct Shape output) {
 	struct Node* newNode
 		= (struct Node*)malloc(sizeof(struct Node));
-	struct Shape input={.n=1, .x=1, .y=1, .z=1};
-	int out = output.x * output.y * output.z;
-	int batch_size = output.n;
-	newNode->layer = createLayer("none", input, out, batch_size);
-	newNode->layer->in =output;
-	strncpy(newNode->layerType, "linear", 20);
+	newNode->input = createInput(output, lr);
+	strncpy(newNode->layerType, "input", 20);
 	newNode->prev = NULL;
 	newNode->next = NULL;
-	newNode->layer->lr = lr;
 	return newNode;
 }
 
@@ -58,7 +53,7 @@ struct Node* GetFirstNode(float lr, struct Shape output) {
 //and have their flattened dimensions used as input for the linear layers
 //The other idea is to use this to introduce other things such as optimizers
 void InsertFirst(float lr, struct Shape in) {
-	struct Node* newNode = GetFirstNode(lr, in);
+	struct Node* newNode = GetInput(lr, in);
 	if(head == NULL) {
 		head = newNode;
 		return;
@@ -73,6 +68,9 @@ void InsertAtHead(char activation[], int out) {
 	}else if(strncmp(head->layerType, "conv2d", 7)==0){
 		int flatten = head->convLayer->out.x*head->convLayer->out.y*head->convLayer->out.z;
 		newNode = GetNewNode(activation, flatten, out, head->convLayer->batch_size);
+	}else if(strncmp(head->layerType, "input", 6)==0){
+		head->input->flatten(head->input);
+		newNode = GetNewNode(activation, head->layer->out, out, head->input->out.n);
 	}else{
 		fprintf(stderr, "Could not find layerType %s", head->layerType);
 		exit(1);
@@ -89,17 +87,25 @@ void InsertAtHead(char activation[], int out) {
 		newNode->layer->input = head->convLayer->output;
 		head->convLayer->nextDelta = newNode->layer->delta;
 		head->convLayer->nextWeights = newNode->layer->weights;
+	}else if(strncmp(head->layerType, "input", 6)==0){
+		newNode->layer->lr = head->input->lr;
+		newNode->layer->input = head->input->output;
+	}else{
+		fprintf(stderr, "Could not find layerType %s", head->layerType);
+		exit(1);
 	}
 	head = newNode;
 }
 
-void InsertC2DAtHead(char activation[], int in_channels, int out_channels, int stride, int kernel_size, bool padding)
+void InsertC2DAtHead(char activation[], int in_channels, int out_channels, int kernel_size, int stride, bool padding)
 {
 	struct Node* newNode;
 	if(strncmp(head->layerType, "linear", 7)==0){
-		newNode = GetConvNode(activation, head->layer->in, in_channels, out_channels, stride, kernel_size, padding);
+		newNode = GetConvNode(activation, head->layer->in, in_channels, out_channels, kernel_size, stride, padding);
 	}else if(strncmp(head->layerType, "conv2d", 7)==0){
-		newNode = GetConvNode(activation, head->convLayer->out, in_channels, out_channels, stride, kernel_size, padding);
+		newNode = GetConvNode(activation, head->convLayer->out, in_channels, out_channels, kernel_size, stride, padding);
+	}else if(strncmp(head->layerType, "input", 6)==0){
+		newNode = GetConvNode(activation, head->input->out, in_channels, out_channels, kernel_size, stride, padding);
 	}else{
 		fprintf(stderr, "Could not find layerType %s", head->layerType);
 		exit(1);
@@ -116,6 +122,12 @@ void InsertC2DAtHead(char activation[], int in_channels, int out_channels, int s
 		newNode->convLayer->input = head->convLayer->output;
 		head->convLayer->nextDelta = newNode->convLayer->delta;
 		head->convLayer->nextWeights = newNode->convLayer->kernels;
+	}else if(strncmp(head->layerType, "input", 6)==0){
+		newNode->convLayer->lr = head->input->lr;
+		newNode->convLayer->input = head->input->output;
+	}else{
+		fprintf(stderr, "Could not find layerType %s", head->layerType);
+		exit(1);
 	}
 	head = newNode;
 }
@@ -144,14 +156,13 @@ void Backward(float *y) {
 
 void Forward(float *input, float *output) {
 	struct Node* temp = head;
-	if(temp == NULL) {return; printf("error in forward pass");} 
+	if(temp == NULL) {fprintf(stderr, "Head is NULL in Forward pass"); exit(1);} 
 	// Going to last Node
 	while(temp->next != NULL) {
 		temp = temp->next;
 	}
 	// Traversing backward using prev pointer
-	memmove(temp->layer->output->data, input, sizeof(float)*temp->layer->out*temp->layer->batch_size);
-
+	memmove(temp->input->output->data, input, sizeof(float)*temp->layer->out*temp->layer->batch_size);
 	temp = temp->prev;
 	while(temp != NULL) {
 		if(strncmp(temp->layerType, "linear", 7)==0){
@@ -181,6 +192,8 @@ void Delete() {
         	temp->layer->free_layer(temp->layer);
 		}else if(strncmp(temp->layerType, "conv2d", 7)==0){
 			temp->convLayer->free_layer(temp->convLayer);
+		}else if(strncmp(temp->layerType, "input", 7)==0){
+			temp->input->free_layer(temp->input);
 		}
         free(temp);
         temp = prev;

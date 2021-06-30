@@ -21,6 +21,13 @@ static void freeMatrix(Matrix *matrix)
     free(matrix);
 }
 
+static void flatten(Matrix *matrix)
+{
+    matrix->shape.y = matrix->shape.x*matrix->shape.y*matrix->shape.z;
+    matrix->shape.x = 1;
+    matrix->shape.z = 1;
+}
+
 static void input(Matrix* matrix, float* inMatrix)
 {
     memcpy( matrix->data, inMatrix, sizeof(float)*matrix->shape.x*matrix->shape.y);
@@ -34,6 +41,7 @@ Matrix* createMatrix( int n, int x, int y, int z)
     matrix->shape.y = y;
     matrix->shape.z = z;
     matrix->giveMem = reallocateMem;
+    matrix->flatten = flatten;
     matrix->freeMem = freeMatrix;
     matrix->inputData = input;
     matrix->data = calloc(matrix->shape.n*matrix->shape.x*matrix->shape.y*matrix->shape.z, sizeof(float));

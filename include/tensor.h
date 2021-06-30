@@ -7,6 +7,7 @@
 typedef struct Matrix{
     struct Shape shape;
     float *data;
+    void (*flatten)(struct Matrix*);
     void (*inputData)( struct Matrix*, float*);
     void (*giveMem)( struct Matrix*, struct Shape);
     void (*freeMem)( struct Matrix*);

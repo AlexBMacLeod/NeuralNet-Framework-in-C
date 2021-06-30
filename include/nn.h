@@ -4,6 +4,7 @@
 
 #include "linear.h"
 #include "conv2d.h"
+#include "input.h"
 
 struct Node  {
 	struct Node* next;
@@ -12,12 +13,14 @@ struct Node  {
 	union{
     	LinearLayer *layer;
 		conv2DLayer *convLayer;
+		inputLayer *input;
 	};
 };
 
 typedef struct NeuralNet{
 	void (*add_linear_layer)(char[], int);
 	void (*add_convolutional_layer)(char *, int,  int,  int,  int,  bool);
+	void (*add_input)();
 	void (*forward_pass)(float*, float*);
 	void (*backward_pass)(float*);
 	void (*clean_up)();
@@ -28,7 +31,7 @@ extern struct Node* head; // global variable - pointer to head node.
 //Creates a new Node and returns pointer to it. 
 struct Node* GetNewNode(char[], int, int, int);
 
-struct Node* GetFirstNode(float, struct Shape);
+struct Node* GetInput(float, struct Shape);
 
 //Inserts a Node at head of doubly linked list
 void InsertAtHead(char[], int);

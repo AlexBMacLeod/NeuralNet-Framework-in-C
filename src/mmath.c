@@ -206,14 +206,25 @@ void nonpaddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int s
 
 void paddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int stride)
 {
+    printf("in kernel\n");
+    printf("%d", out->shape.n);
+    printf("%d", in->shape.n);
+    printf("%d", out->shape.n);
     assert(in->shape.n==out->shape.n);
-    assert(ceil(kernel->shape.x/2.0f)!=floor(kernel->shape.x/2.0f));
-    assert((in->shape.x)/stride==out->shape.x);
-    assert((in->shape.y)/stride==out->shape.y);
+    printf("assert 2\n");
+    assert(ceil((float)kernel->shape.x/2.0f)!=floor((float)kernel->shape.x/2.0f));
+    printf("assert 3\n");
+    assert(out->shape.z==kernel->shape.z);
+    printf("assert 4\n");
+    assert((in->shape.x)==out->shape.x);
+    printf("in n %d x %d y %d z %d\n", in->shape.n, in->shape.x, in->shape.y, in->shape.z);
+    printf("out n %d x %d y %d z %d\n", out->shape.n, out->shape.x, out->shape.y, out->shape.z);
+    assert((in->shape.y)==out->shape.y);
     assert(kernel->shape.z==out->shape.z);
     memset(out->data, 0, sizeof(float)*out->shape.n*out->shape.x*out->shape.y*out->shape.z);
     float sum=0;
     int pad = (kernel->shape.x-1)/2;
+    printf("start\n");
     int l, i, j, k, m, n, p;
     for(l=0; l<in->shape.n; l++)
     {
@@ -245,6 +256,7 @@ void paddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int stri
             }
         }
     }
+    printf("Done\n");
 }
 
 void matrixScalarMultiplication(Matrix* A, float *out, float sc)
