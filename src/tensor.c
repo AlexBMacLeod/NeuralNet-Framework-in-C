@@ -33,6 +33,12 @@ static void input(Matrix* matrix, float* inMatrix)
     memcpy( matrix->data, inMatrix, sizeof(float)*matrix->shape.x*matrix->shape.y);
 }
 
+static void zero(Matrix* matrix)
+{
+    long data_size = matrix->shape.n*matrix->shape.x*matrix->shape.y*matrix->shape.z * sizeof(float);
+    memset(matrix->data, 0, data_size);
+}
+
 Matrix* createMatrix( int n, int x, int y, int z)
 {
     Matrix* matrix = (Matrix*)malloc(sizeof(Matrix));
@@ -44,6 +50,7 @@ Matrix* createMatrix( int n, int x, int y, int z)
     matrix->flatten = flatten;
     matrix->freeMem = freeMatrix;
     matrix->inputData = input;
+    matrix->zero = zero;
     matrix->data = calloc(matrix->shape.n*matrix->shape.x*matrix->shape.y*matrix->shape.z, sizeof(float));
     return matrix;
 }

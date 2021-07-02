@@ -21,15 +21,16 @@ void freeLayer(LinearLayer* layer)
 {
     layer->weights->freeMem(layer->weights);
     layer->output->freeMem(layer->output);
-    layer->deriv->freeMem(layer->deriv);
+    if(layer->deriv!=NULL) layer->deriv->freeMem(layer->deriv);
     layer->delta->freeMem(layer->delta);
+    if(layer->nextWeights==NULL) layer->nextDelta->freeMem(layer->nextDelta);
     free(layer);
 }
 
 void makeWeights( Matrix* matrix)
 {
     srand(time(NULL));
-    for(int i = 0; i < matrix->shape.x; i++)
+    for(int i = 0; i < matrix->shape.n; i++)
     {
         for(int j = 0; j < matrix->shape.y; j++)
         {
@@ -52,12 +53,12 @@ LinearLayer* createLayer(char activation[], struct Shape in, int out, int batch_
 {
     LinearLayer *layer = malloc(sizeof(LinearLayer));
 
-    layer->flat = in.x*in.y*in.z;
+    //layer->flat = in.x*in.y*in.z;
 
-    layer->deriv = createMatrix( batch_size, 1, out, 1);
-    layer->weights = createMatrix( 1, layer->flat, out, 1);
+    layer->deriv = NULL;
+    layer->weights = createMatrix( in.y, 1, out, 1);
     layer->output = createMatrix( batch_size, 1, out, 1);
-    layer->delta = createMatrix( batch_size, 1, out, 1);
+    layer->delta = createMatrix( batch_size, 1, in.y, 1);
 
     layer->batch_size = batch_size;
     layer->in = in;
@@ -67,12 +68,14 @@ LinearLayer* createLayer(char activation[], struct Shape in, int out, int batch_
     {
         layer->actFunc = relu;
         layer->derivFunc = relu_deriv;
+        layer->deriv = createMatrix( batch_size, 1, out, 1);
     }else if(strcmp(activation, "softmax")==0){
         layer->actFunc = softMax;
         layer->derivFunc = none;
     }else if(strcmp(activation, "tanh")==0){
         layer->actFunc = tanhAct;
         layer->derivFunc = tanhAct_deriv;
+        layer->deriv = createMatrix( batch_size, 1, out, 1);
     }else{
         layer->actFunc = none;
         layer->derivFunc = none;
@@ -89,32 +92,32 @@ LinearLayer* createLayer(char activation[], struct Shape in, int out, int batch_
 
 void delta(struct LinearLayer* layer, float* y)
 {
-    if(layer->nextDelta==NULL)
+    if(layer->nextWeights==NULL)
     {   
+        layer->nextDelta = createMatrix(layer->batch_size, 1 , layer->out, 1);
         float b_size = layer->batch_size;
-        for(int i=0; i<layer->delta->shape.x; i++)
+        for(int i=0; i<layer->nextDelta->shape.n; i++)
         {
-            for(int j=0; j<layer->delta->shape.y; j++)
+            for(int j=0; j<layer->nextDelta->shape.y; j++)
             {
-                layer->delta->data[i*layer->out+j] = (layer->output->data[i*layer->out+j] - y[i*layer->out+j])/b_size;
+                layer->nextDelta->data[i*layer->out+j] = (layer->output->data[i*layer->out+j] - y[i*layer->out+j])/b_size;
             }
         }
-    }else{
-    Matrix *invWeights = createInverse(layer->nextWeights);
+    }
+    if(layer->deriv!=NULL) elemMatrixMultInPlace(layer->nextDelta, layer->deriv);
+    Matrix *invWeights = createInverse(layer->weights);
     matrixMultiplication(layer->nextDelta, invWeights, layer->delta);
     invWeights->freeMem(invWeights);
-    }
-    if(layer->derivFunc!=none){
-        elemMatrixMultInPlace(layer->delta, layer->deriv);
-    }
+    //if(layer->derivFunc!=none){
+    //}
 }
 
 
 void backward(struct LinearLayer* layer)
 {
     Matrix *invInput = createInverse(layer->input);
-    Matrix *weightsDelta = createMatrix(1, layer->flat, layer->out, 1);
-    matrixMultiplication(invInput, layer->delta, weightsDelta);
+    Matrix *weightsDelta = createMatrix(layer->in.y, 1, layer->out, 1);
+    matrixMultiplication(invInput, layer->nextDelta, weightsDelta);
     matrixScalarMultiplicationInPlace(weightsDelta, layer->lr);
     matrixSubtraction(layer->weights, weightsDelta);
     weightsDelta->freeMem(weightsDelta);

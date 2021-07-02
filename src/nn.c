@@ -15,7 +15,7 @@ struct Node* head; // global variable - pointer to head node.
 struct Node* GetNewNode(char activation[], int in, int out, int batch_size) {
 	struct Node* newNode
 		= (struct Node*)malloc(sizeof(struct Node));
-	struct Shape input={.n=1, .x=in, .y=1, .z=1};
+	struct Shape input={.n=1, .x=1, .y=in, .z=1};
 	newNode->layer = createLayer(activation, input, out, batch_size);
 	strncpy(newNode->layerType, "linear", 20);
 	newNode->prev = NULL;
@@ -59,8 +59,8 @@ void InsertFirst(float lr, struct Shape in) {
 		return;
 	}
 }
-//So then head is the first
-//Inserts a Node at head of doubly linked list
+
+//Inserts a linear layer
 void InsertAtHead(char activation[], int out) {
 	struct Node* newNode;
 	if(strncmp(head->layerType, "linear", 7)==0){
@@ -70,7 +70,7 @@ void InsertAtHead(char activation[], int out) {
 		newNode = GetNewNode(activation, flatten, out, head->convLayer->batch_size);
 	}else if(strncmp(head->layerType, "input", 6)==0){
 		head->input->flatten(head->input);
-		newNode = GetNewNode(activation, head->layer->out, out, head->input->out.n);
+		newNode = GetNewNode(activation, head->input->flat, out, head->input->out.n);
 	}else{
 		fprintf(stderr, "Could not find layerType %s", head->layerType);
 		exit(1);
@@ -162,7 +162,7 @@ void Forward(float *input, float *output) {
 		temp = temp->next;
 	}
 	// Traversing backward using prev pointer
-	memmove(temp->input->output->data, input, sizeof(float)*temp->layer->out*temp->layer->batch_size);
+	memmove(temp->input->output->data, input, sizeof(float)*temp->input->flat*temp->input->out.n);
 	temp = temp->prev;
 	while(temp != NULL) {
 		if(strncmp(temp->layerType, "linear", 7)==0){

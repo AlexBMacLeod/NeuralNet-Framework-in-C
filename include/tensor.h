@@ -11,6 +11,7 @@ typedef struct Matrix{
     void (*inputData)( struct Matrix*, float*);
     void (*giveMem)( struct Matrix*, struct Shape);
     void (*freeMem)( struct Matrix*);
+    void (*zero)( struct Matrix*);
 }Matrix;
 
 Matrix* createMatrix( int, int x, int y, int z);

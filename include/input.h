@@ -13,6 +13,7 @@ ran in to some issues with dimensionality of output specifically with flattening
 typedef struct inputLayer{
     Matrix *output;
     float lr;
+    int flat;
     struct Shape out;
     void (*flatten)(struct inputLayer*);
     void (*free_layer)(struct inputLayer*);
@@ -20,6 +21,6 @@ typedef struct inputLayer{
 
 void freeInput(inputLayer*);
 
-inputLayer* createInput(struct Shape, int);
+inputLayer* createInput(struct Shape, float);
 
 #endif

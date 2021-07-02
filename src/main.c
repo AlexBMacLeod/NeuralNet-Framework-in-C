@@ -12,8 +12,8 @@
 int main(void)
 {
     NeuralNet nn = createNetwork(.001f, BATCH_SIZE, 28, 28, 1);
-    nn.add_convolutional_layer("relu", 1, 32, 5, 1, true);
-    nn.add_convolutional_layer("relu", 32, 64, 5, 1, true);
+    //nn.add_convolutional_layer("relu", 1, 16, 5, 1, true);
+    //nn.add_convolutional_layer("relu", 16, 32, 5, 1, true);
     nn.add_linear_layer("relu", 512);
     nn.add_linear_layer("relu", 256);
     nn.add_linear_layer("softmax", 10);
@@ -29,7 +29,7 @@ int main(void)
     {
         printf("Iteration: %d\n",iteration);
         float error=0;
-        for(int i=0;i<floor(mnist_data.len_train/BATCH_SIZE);i++)
+        for(int i=0;i<floor(1000/BATCH_SIZE);i++)
         {
             memmove(in, (mnist_data.train_data+(i*784*BATCH_SIZE)), sizeof(float)*784*BATCH_SIZE);
             memmove(y, (mnist_data.train_labels+(i*10*BATCH_SIZE)), sizeof(float)*10*BATCH_SIZE);
@@ -39,7 +39,7 @@ int main(void)
         }
         if(iteration%10==9){
             printf("Error: %f\n", error);
-            printf("Correct Count: %d/%d\n", validation_run( mnist_data.test_data, mnist_data.test_labels, mnist_data.len_test, BATCH_SIZE, nn), (int)(floor(mnist_data.len_test/BATCH_SIZE)*BATCH_SIZE));}
+            printf("Correct Count: %d/%d\n", validation_run( mnist_data.test_data, mnist_data.test_labels, 1000, BATCH_SIZE, nn), (int)(floor(1000/BATCH_SIZE)*BATCH_SIZE));}
     }
 
     nn.clean_up();

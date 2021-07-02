@@ -8,12 +8,12 @@
 
 Matrix* createInverse(Matrix* matrix)
 {
-    Matrix* newMatrix = createMatrix(1, matrix->shape.y, matrix->shape.x, 1);
-    for(int i=0; i<matrix->shape.x; i++)
+    Matrix* newMatrix = createMatrix(matrix->shape.y, 1, matrix->shape.n, 1);
+    for(int i=0; i<matrix->shape.n; i++)
     {
         for(int j=0; j<matrix->shape.y; j++)
         {
-            newMatrix->data[j*matrix->shape.x+i] = matrix->data[matrix->shape.y*i+j];
+            newMatrix->data[j*matrix->shape.n+i] = matrix->data[matrix->shape.y*i+j];
         }
     }
     return newMatrix;
@@ -23,9 +23,18 @@ void matrixMultiplication(Matrix* A, Matrix* B, Matrix* C)
 {
     float sum;
     int i, j, k;
-    assert(A->shape.y == B->shape.x);
-    assert(A->shape.x == C->shape.x);
-    assert(B->shape.y == C->shape.y);
+    if(B->shape.z==1 && A->shape.z==1){
+        assert(A->shape.y == B->shape.n);
+        assert(A->shape.n == C->shape.n);
+        assert(B->shape.y == C->shape.y);
+    }else{
+        int flat_b = B->shape.x*B->shape.y*B->shape.z;
+        int flat_a = A->shape.x*A->shape.y*A->shape.z;
+        assert(flat_a == B->shape.n);
+        assert(A->shape.n == C->shape.n);
+        assert(flat_b == C->shape.y);
+    }
+
     //Here we create our parallel loops, we specify that the variables A, B and C are shared between all threads where as
     //i, j and k are private to each thread. This is fairly similar to basic matrix multiplication in
     //CUDA where the matrices would be global and i, j, k local. The performance constraint there as well as here is how the
@@ -35,12 +44,12 @@ void matrixMultiplication(Matrix* A, Matrix* B, Matrix* C)
     #pragma omp parallel shared(A,B,C) private(i, sum, j,k)
     {
         #pragma omp for schedule(static)
-        for (i = 0; i < A->shape.x; i++) {
-            for (j = 0; j < B->shape.y; j++) {
+        for (i = 0; i < A->shape.n; i++) {
+            for (j = 0; j < C->shape.y; j++) {
                 sum = 0;
                 for (k = 0; k < A->shape.y; k++)
-                    sum = sum + A->data[i * A->shape.y + k] * B->data[k * B->shape.y + j];
-                C->data[i * B->shape.y + j] = sum;
+                    sum = sum + A->data[i * B->shape.n + k] * B->data[k * C->shape.y + j];
+                C->data[i * C->shape.y + j] = sum;
             }
         }
     }
@@ -48,13 +57,13 @@ void matrixMultiplication(Matrix* A, Matrix* B, Matrix* C)
 
 void matrixVecMultiplication(Matrix* A, Matrix* b, Matrix* c)
 {
-    assert(A->shape.y==b->shape.x);
+    assert(A->shape.y==b->shape.n);
     float sum;
     int i, k;
     #pragma omp parallel shared(A,b,c) private(i,k)
     {
         #pragma omp for schedule(static)
-        for (i = 0; i < A->shape.x; i++) 
+        for (i = 0; i < A->shape.n; i++) 
         {
             sum = 0;
             for (k = 0; k < A->shape.y; k++)
@@ -66,7 +75,7 @@ void matrixVecMultiplication(Matrix* A, Matrix* b, Matrix* c)
 
 void vecMatrixMultiplication(Matrix* a, Matrix* B, Matrix* c)
 {
-    assert(a->shape.y==B->shape.x);
+    assert(a->shape.y==B->shape.n);
     float sum;
     int j, k;
     #pragma omp parallel shared(a,B,c) private(j,k)
@@ -86,8 +95,8 @@ void vecMatrixMultiplication(Matrix* a, Matrix* B, Matrix* c)
 
 void vecVecMultiplication(Matrix* a, Matrix* b, Matrix* C)
 {
-    assert(a->shape.y == b->shape.x);
-    for(int i=0; i<a->shape.x; i++)
+    assert(a->shape.y == b->shape.n);
+    for(int i=0; i<a->shape.n; i++)
     {
         for(int j=0; j<b->shape.y; j++)
         {
@@ -98,9 +107,9 @@ void vecVecMultiplication(Matrix* a, Matrix* b, Matrix* C)
 
 void matrixSubtraction(Matrix* A, Matrix* B)
 {
-    assert(A->shape.x == B->shape.x);
+    assert(A->shape.n == B->shape.n);
     assert(A->shape.y == B->shape.y);
-    for(int i=0; i<A->shape.x; i++)
+    for(int i=0; i<A->shape.n; i++)
     {
         for(int j=0; j<A->shape.y; j++)
         {
@@ -131,7 +140,7 @@ void vecElemMultiplication(Matrix* a, Matrix* b)
 
 void matrixScalarMultiplicationInPlace(Matrix* A, float sc)
 {
-    for(int i=0; i<A->shape.x; i++)
+    for(int i=0; i<A->shape.n; i++)
     {
         for(int j=0; j<A->shape.y; j++)
         {
@@ -143,16 +152,25 @@ void matrixScalarMultiplicationInPlace(Matrix* A, float sc)
 void elemMatrixMultInPlace(Matrix* A, Matrix* B)
 {
     int i, j;
-    assert(A->shape.x == B->shape.x);
-    assert(A->shape.y == B->shape.y);
-
-    #pragma omp parallel shared(A,B) private(i,j)
-    {
-        #pragma omp for schedule(static)
-        for (i = 0; i < A->shape.x; i++) {
-            for (j = 0; j < B->shape.y; j++) {
+    if(B->shape.z==1 && A->shape.z==1){
+        assert(A->shape.n == B->shape.n);
+        assert(A->shape.y == B->shape.y);
+        #pragma omp parallel shared(A,B) private(i,j)
+        {
+            #pragma omp for schedule(static)
+            for (i = 0; i < A->shape.n; i++) {
+                for (j = 0; j < B->shape.y; j++) {
                      A->data[i*B->shape.y+j] = A->data[i*B->shape.y+j] * B->data[i*B->shape.y+j];
+                }
             }
+        }
+    }else{
+        int flat_b = B->shape.n*B->shape.x*B->shape.y*B->shape.z;
+        int flat_a = A->shape.n*A->shape.x*A->shape.y*A->shape.z;
+        assert(flat_a == flat_b);
+        for(int i=0;i<flat_a;i++)
+        {
+            A->data[i]=A->data[i]*B->data[i];
         }
     }
 }
@@ -206,25 +224,15 @@ void nonpaddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int s
 
 void paddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int stride)
 {
-    printf("in kernel\n");
-    printf("%d", out->shape.n);
-    printf("%d", in->shape.n);
-    printf("%d", out->shape.n);
     assert(in->shape.n==out->shape.n);
-    printf("assert 2\n");
     assert(ceil((float)kernel->shape.x/2.0f)!=floor((float)kernel->shape.x/2.0f));
-    printf("assert 3\n");
     assert(out->shape.z==kernel->shape.z);
-    printf("assert 4\n");
     assert((in->shape.x)==out->shape.x);
-    printf("in n %d x %d y %d z %d\n", in->shape.n, in->shape.x, in->shape.y, in->shape.z);
-    printf("out n %d x %d y %d z %d\n", out->shape.n, out->shape.x, out->shape.y, out->shape.z);
     assert((in->shape.y)==out->shape.y);
     assert(kernel->shape.z==out->shape.z);
     memset(out->data, 0, sizeof(float)*out->shape.n*out->shape.x*out->shape.y*out->shape.z);
     float sum=0;
     int pad = (kernel->shape.x-1)/2;
-    printf("start\n");
     int l, i, j, k, m, n, p;
     for(l=0; l<in->shape.n; l++)
     {
@@ -256,12 +264,11 @@ void paddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int stri
             }
         }
     }
-    printf("Done\n");
 }
 
 void matrixScalarMultiplication(Matrix* A, float *out, float sc)
 {
-    for(int i=0; i<A->shape.x; i++)
+    for(int i=0; i<A->shape.n; i++)
     {
         for(int j=0; j<A->shape.y; j++)
         {
