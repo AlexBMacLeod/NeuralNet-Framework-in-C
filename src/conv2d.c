@@ -15,10 +15,11 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
     conv2DLayer *layer = malloc(sizeof(conv2DLayer));
     assert(floor((float)kernel_size/2.0f)!=ceil((float)kernel_size/2.0f));
     int batch_size = in.n;
+    //Idea change delta to reflect channels of in layer to enable element multiplication
     if(padding){
         layer->output = createMatrix( batch_size, floor(in.x/stride), floor(in.y/stride), out_channels);
         layer->deriv = createMatrix( batch_size, floor(in.x/stride), floor(in.y/stride), out_channels);
-        layer->delta = createMatrix( batch_size, floor(in.x/stride), floor(in.y/stride), out_channels);
+        layer->delta = createMatrix( batch_size, floor(in.x/stride), floor(in.y/stride), in_channels);
     }else{
         assert((in.x-kernel_size+1)>0);
         assert((in.y-kernel_size+1)>0);
@@ -109,39 +110,37 @@ void weightUpdate( conv2DLayer* layer)
 
 void backwardConv2D( conv2DLayer* layer, float *y)
 {
-    printf("In\n");
     layer->delta->zero(layer->delta);
-    printf("zero one\n");
     layer->dK->zero(layer->dK);
     elemMatrixMultInPlace(layer->nextDelta, layer->deriv);
-    printf("Zeros done\n");
+
     int pad = (layer->kernels->shape.x-1)/2;
-    int i_M, o_M, i_X, o_X, i_Y, o_Y, i_C, o_C, k_M, k_X, k_Y, k_C;
-    i_M=layer->input->shape.n; i_X=layer->input->shape.x; i_Y=layer->input->shape.y; i_C=layer->input->shape.z;
+    int o_M, o_X, o_Y, i_C, o_C, k_X, k_Y;
+    i_C=layer->input->shape.z;
     o_M=layer->nextDelta->shape.n; o_X=layer->nextDelta->shape.x; o_Y=layer->nextDelta->shape.y; o_C=layer->nextDelta->shape.z;
-    k_M=layer->kernels->shape.n; k_X=layer->kernels->shape.x; k_Y=layer->kernels->shape.y; k_C=layer->kernels->shape.z;
-    for(int i=0; i<layer->out.n; i++)
+    k_X=layer->kernels->shape.x; k_Y=layer->kernels->shape.y;
+    for(int i=0; i<o_M; i++)
     {
-        for(int j=0;j<layer->out.x;j++)
+        for(int j=0;j<o_X;j++)
         {
-            for(int k=0;k<layer->out.y;k++)
+            for(int k=0;k<o_Y;k++)
             {
-                for(int m=0;m<layer->kernels->shape.x;m++)
+                for(int m=0;m<k_X;m++)
                 {
-                    for(int n=0;n<layer->kernels->shape.y;n++)
+                    for(int n=0;n<k_Y;n++)
                     {
-                        for(int l=0;l<layer->in.z;l++)
+                        for(int l=0;l<i_C;l++)
                         {
-                            for(int p=0;p<layer->out.z;p++)
+                            for(int p=0;p<o_C;p++)
                             {
                                 if((j-pad)>=0 && (j+pad)<layer->out.x && (k-pad)>=0 && (k+pad)<layer->out.y){
-                                layer->delta->data[((i*o_X+(j-pad+m))*o_Y+(k-pad+n))*i_C+l]
-                                += layer->kernels->data[((l*k_X+m)*k_Y+n)*o_C+p]
-                                * layer->nextDelta->data[((i*o_X+j)*o_Y+k)*o_C+p];
+                                layer->delta->data[i*o_X*o_Y*i_C+(j-pad+m)*o_Y*i_C+(k-pad+n)*i_C+l]
+                                += layer->kernels->data[l*k_X*k_Y*o_C+m*k_Y*o_C+n*o_C+p]
+                                * layer->nextDelta->data[i*o_X*o_Y*o_C+j*o_Y*o_C+k*o_C+p];
 
-                                layer->dK->data[((l*k_X+m)*k_Y+n)*o_C+p]
-                                += layer->nextDelta->data[((i*o_X+j)*o_Y+k)*i_C+l]
-                                * layer->input->data[((i*o_X+(j-pad+m))*o_Y+(k-pad+n))*i_C+l];}
+                                layer->dK->data[l*k_X*k_Y*o_C+m*k_Y*o_C+n*o_C+p]
+                                += layer->nextDelta->data[i*o_X*o_Y*o_C+j*o_Y*o_C+k*o_C+p]
+                                * layer->input->data[i*o_X*o_Y*i_C+(j-pad+m)*o_Y*i_C+(k-pad+n)*i_C+l];}
                             }
                         }
                     }
@@ -149,7 +148,6 @@ void backwardConv2D( conv2DLayer* layer, float *y)
             }
         }
     }
-    printf("Convolution backward done\n");
 }
 
 

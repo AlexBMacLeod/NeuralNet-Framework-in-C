@@ -8,14 +8,20 @@
 
 Matrix* createInverse(Matrix* matrix)
 {
-    Matrix* newMatrix = createMatrix(matrix->shape.y, 1, matrix->shape.n, 1);
-    for(int i=0; i<matrix->shape.n; i++)
-    {
-        for(int j=0; j<matrix->shape.y; j++)
-        {
-            newMatrix->data[j*matrix->shape.n+i] = matrix->data[matrix->shape.y*i+j];
-        }
+    Matrix* newMatrix;
+    if(matrix->shape.z==1){
+        newMatrix = createMatrix(matrix->shape.y, 1, matrix->shape.n, 1);
+    }else{
+        int len = matrix->shape.x*matrix->shape.y*matrix->shape.z;
+        newMatrix = createMatrix(len, 1, matrix->shape.n, 1);
     }
+        for(int i=0; i<matrix->shape.n; i++)
+        {
+            for(int j=0; j<matrix->shape.y; j++)
+            {
+                newMatrix->data[j*matrix->shape.n+i] = matrix->data[matrix->shape.y*i+j];
+            }
+        }
     return newMatrix;
 }
 
@@ -234,32 +240,36 @@ void paddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int stri
     float sum=0;
     int pad = (kernel->shape.x-1)/2;
     int l, i, j, k, m, n, p;
-    for(l=0; l<in->shape.n; l++)
+    #pragma omp parallel shared(out,in,kernel, pad) private(l, i, j, k, m, n, p, sum)
     {
-        for(i=0; i<out->shape.x; i+=stride)
+        #pragma omp for schedule(static)
+        for(l=0; l<in->shape.n; l++)
         {
-            for(j=0; j<out->shape.y;j+=stride)
+            for(i=0; i<out->shape.x; i+=stride)
             {
-                for(p=0; p<out->shape.z; p++)
+                for(j=0; j<out->shape.y;j+=stride)
                 {
-                    for(m=0; m<kernel->shape.x; m++)
+                    for(p=0; p<out->shape.z; p++)
                     {
-                        for(n=0; n<kernel->shape.y; n++)
+                        for(m=0; m<kernel->shape.x; m++)
                         {
-                            for(k=0; k<in->shape.z; k++)
+                            for(n=0; n<kernel->shape.y; n++)
                             {
-                                if(((i-pad)>=0) && ((i+pad)<out->shape.x) && ((j-pad)>=0) && ((j+pad)<out->shape.y))
+                                for(k=0; k<in->shape.z; k++)
                                 {
-                                    sum+=kernel->data[((p*kernel->shape.x+m)*kernel->shape.y+n)*in->shape.z+k] *
-                                    in->data[((l*(out->shape.x-pad+m)+i)*(out->shape.y-pad+n)+j)*in->shape.z+k];
-                                }else{
-                                    sum+=0;
+                                    if(((i-pad)>=0) && ((i+pad)<out->shape.x) && ((j-pad)>=0) && ((j+pad)<out->shape.y))
+                                    {
+                                        sum+=kernel->data[((p*kernel->shape.x+m)*kernel->shape.y+n)*in->shape.z+k] *
+                                        in->data[((l*(out->shape.x)+(m+i-pad))*(out->shape.y)+(n+j-pad))*in->shape.z+k];
+                                    }else{
+                                        sum+=0;
+                                    }
                                 }
                             }
                         }
+                        out->data[((l*(out->shape.x)+i)*(out->shape.y)+j)*out->shape.z+p] = sum;
+                        sum=0;
                     }
-                    out->data[((l*(out->shape.x)+i)*(out->shape.y)+j)*out->shape.z+p] = sum;
-                    sum=0;
                 }
             }
         }
