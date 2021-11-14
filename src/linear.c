@@ -94,7 +94,7 @@ void delta(struct LinearLayer* layer, float* y)
 {
     if(layer->nextWeights==NULL)
     {   
-        layer->nextDelta = createMatrix(layer->batch_size, 1 , layer->out, 1);
+        if(layer->nextDelta==NULL) layer->nextDelta = createMatrix(layer->batch_size, 1 , layer->out, 1);
         float b_size = layer->batch_size;
         for(int i=0; i<layer->nextDelta->shape.n; i++)
         {

@@ -96,8 +96,7 @@ void forwardConv2D( conv2DLayer* layer)
 {
     if(layer->padding){ 
         paddedConvolutionalKernel(layer->input, layer->kernels, layer->output,layer->stride);
-    }
-    else nonpaddedConvolutionalKernel(layer->input, layer->kernels, layer->output,layer->stride);
+    }else {nonpaddedConvolutionalKernel(layer->input, layer->kernels, layer->output,layer->stride);}
     layer->actFunc(layer);
     layer->derivFunc(layer);
 }
@@ -115,32 +114,40 @@ void backwardConv2D( conv2DLayer* layer, float *y)
     elemMatrixMultInPlace(layer->nextDelta, layer->deriv);
 
     int pad = (layer->kernels->shape.x-1)/2;
-    int o_M, o_X, o_Y, i_C, o_C, k_X, k_Y;
+    int o_M, o_X, o_Y, i_C, o_C, k_X, k_Y, l, i, j, k, m, n, p;
     i_C=layer->input->shape.z;
     o_M=layer->nextDelta->shape.n; o_X=layer->nextDelta->shape.x; o_Y=layer->nextDelta->shape.y; o_C=layer->nextDelta->shape.z;
     k_X=layer->kernels->shape.x; k_Y=layer->kernels->shape.y;
-    for(int i=0; i<o_M; i++)
+    #pragma omp parallel shared(layer) private(l, i, j, k, m, n, p)
     {
-        for(int j=0;j<o_X;j++)
+        #pragma omp for schedule(static)
+        for(i=0; i<o_M; i++)
         {
-            for(int k=0;k<o_Y;k++)
+            for(j=0;j<o_X;j++)
             {
-                for(int m=0;m<k_X;m++)
+                for(k=0;k<o_Y;k++)
                 {
-                    for(int n=0;n<k_Y;n++)
+                    for(m=0;m<k_X;m++)
                     {
-                        for(int l=0;l<i_C;l++)
+                        for(n=0;n<k_Y;n++)
                         {
-                            for(int p=0;p<o_C;p++)
+                            for(l=0;l<i_C;l++)
                             {
-                                if((j-pad)>=0 && (j+pad)<layer->out.x && (k-pad)>=0 && (k+pad)<layer->out.y){
-                                layer->delta->data[i*o_X*o_Y*i_C+(j-pad+m)*o_Y*i_C+(k-pad+n)*i_C+l]
-                                += layer->kernels->data[l*k_X*k_Y*o_C+m*k_Y*o_C+n*o_C+p]
-                                * layer->nextDelta->data[i*o_X*o_Y*o_C+j*o_Y*o_C+k*o_C+p];
+                                for(p=0;p<o_C;p++)
+                                {
+                                    if((j-pad)>=0 && (j+pad)<layer->out.x && (k-pad)>=0 && (k+pad)<layer->out.y){
+                                        layer->delta->data[i*o_X*o_Y*i_C+(j-pad+m)*o_Y*i_C+(k-pad+n)*i_C+l]
+                                        += layer->kernels->data[l*k_X*k_Y*o_C+m*k_Y*o_C+n*o_C+p]
+                                        * layer->nextDelta->data[i*o_X*o_Y*o_C+j*o_Y*o_C+k*o_C+p];
 
-                                layer->dK->data[l*k_X*k_Y*o_C+m*k_Y*o_C+n*o_C+p]
-                                += layer->nextDelta->data[i*o_X*o_Y*o_C+j*o_Y*o_C+k*o_C+p]
-                                * layer->input->data[i*o_X*o_Y*i_C+(j-pad+m)*o_Y*i_C+(k-pad+n)*i_C+l];}
+                                        #pragma omp critical
+                                        {
+                                            layer->dK->data[l*k_X*k_Y*o_C+m*k_Y*o_C+n*o_C+p]
+                                            += layer->nextDelta->data[i*o_X*o_Y*o_C+j*o_Y*o_C+k*o_C+p]
+                                            * layer->input->data[i*o_X*o_Y*i_C+(j-pad+m)*o_Y*i_C+(k-pad+n)*i_C+l];
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
