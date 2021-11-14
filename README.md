@@ -1,12 +1,14 @@
 # c-nn
 
 I started this off for CUDA C because I didn't see any examples of neural
-networks on Github implemented in CUDA C. Mind you that doesn't mean they 
-don't exist, but rather that a cursory search didn't reveal any. There are
-a number of course written in CUDA C++, two of the most famous ofcourse
-being TensorFlow and Pytorch.
+networks on Github implemented in CUDA C. I've since found them, but be
+that as it may the programming is actually quite intricate and quite fun, 
+especially all the moving parts, and different pieces and how to put everything
+together.
 
-As far as functionality go, for something more professional CUDA C++
+As a side note the Convolutional Layers are not currently working.
+
+As far as functionality goes, for something more professional CUDA C++
 makes more sense. Initially, machine learning owing so much to parallel
 programming, I thought that this would be an interesting project. 
 After starting and stopping a couple of times I realized that while the 
@@ -34,16 +36,5 @@ far more needs the next layers weight matrix and delta. So with the initialziati
 I can easily pass each row the pointers it needs to backprop, and thus 
 somewhat simplify things that way.
 
-The other hiccough that the linked list helps with is the first and last
-layers. What I mean by this is that those two are fundamentally different.
-While all hidden layers, and the output layer take as their input the 
-previous layers output, which is fairly easy to program, just make their
-input a pointer to the previous layers output and voila. The presence of
-these discrepencies can be overcome then by using some if clauses targeted
-at the presence of NULLs in the linked list to single out the first 
-and last rows for special treatment. This being implemented one can simply
-call front_pass(input) and back_pass(error) to forward prop and backprop 
-and leave everything else up to the linked list. Creating the network
-then becomes as easy as
 
 net_add_layer("relu", 256, 512);
