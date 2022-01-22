@@ -95,7 +95,7 @@ void addPadding(Matrix *img, int kernel_size)
 void forwardConv2D( conv2DLayer* layer)
 {
     if(layer->padding){ 
-        paddedConvolutionalKernel(layer->input, layer->kernels, layer->output,layer->stride);
+        padDevolved2d(layer->input, layer->kernels, layer->output,layer->stride);
     }else {nonpaddedConvolutionalKernel(layer->input, layer->kernels, layer->output,layer->stride);}
     layer->actFunc(layer);
     layer->derivFunc(layer);
@@ -121,31 +121,29 @@ void backwardConv2D( conv2DLayer* layer, float *y)
     #pragma omp parallel shared(layer) private(l, i, j, k, m, n, p)
     {
         #pragma omp for schedule(static)
-        for(i=0; i<o_M; i++)
+        for(l=0;l<i_C;l++)
         {
-            for(j=0;j<o_X;j++)
+            for(i=0; i<o_M; i++)
             {
-                for(k=0;k<o_Y;k++)
+                for(j=0;j<o_X;j++)
                 {
-                    for(m=0;m<k_X;m++)
+                    for(k=0;k<o_Y;k++)
                     {
-                        for(n=0;n<k_Y;n++)
+                        for(m=0;m<k_X;m++)
                         {
-                            for(l=0;l<i_C;l++)
+                            for(n=0;n<k_Y;n++)
                             {
                                 for(p=0;p<o_C;p++)
-                                {
+                                    {
                                     if((j-pad)>=0 && (j+pad)<layer->out.x && (k-pad)>=0 && (k+pad)<layer->out.y){
                                         layer->delta->data[i*o_X*o_Y*i_C+(j-pad+m)*o_Y*i_C+(k-pad+n)*i_C+l]
                                         += layer->kernels->data[l*k_X*k_Y*o_C+m*k_Y*o_C+n*o_C+p]
                                         * layer->nextDelta->data[i*o_X*o_Y*o_C+j*o_Y*o_C+k*o_C+p];
 
-                                        #pragma omp critical
-                                        {
-                                            layer->dK->data[l*k_X*k_Y*o_C+m*k_Y*o_C+n*o_C+p]
-                                            += layer->nextDelta->data[i*o_X*o_Y*o_C+j*o_Y*o_C+k*o_C+p]
-                                            * layer->input->data[i*o_X*o_Y*i_C+(j-pad+m)*o_Y*i_C+(k-pad+n)*i_C+l];
-                                        }
+
+                                        layer->dK->data[l*k_X*k_Y*o_C+m*k_Y*o_C+n*o_C+p]
+                                        += layer->nextDelta->data[i*o_X*o_Y*o_C+j*o_Y*o_C+k*o_C+p]
+                                        * layer->input->data[i*o_X*o_Y*i_C+(j-pad+m)*o_Y*i_C+(k-pad+n)*i_C+l];
                                     }
                                 }
                             }

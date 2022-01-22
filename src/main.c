@@ -14,9 +14,8 @@ int main(void)
     NeuralNet nn = createNetwork(.001f, BATCH_SIZE, 28, 28, 1);
     //nn.add_convolutional_layer("relu", 1, 16, 5, 1, true);
     //nn.add_convolutional_layer("relu", 16, 32, 5, 1, true);
-    nn.add_linear_layer("relu", 512);
     nn.add_linear_layer("relu", 256);
-    nn.add_linear_layer("softmax", 10);
+    nn.add_linear_layer("soft_max", 10);
     char file[] = "../data/train.csv";
 
     float *y_hat = calloc(10*BATCH_SIZE, sizeof(float));
@@ -25,11 +24,11 @@ int main(void)
     struct mnist mnist_data = load_mnist(file, TEST_TRAIN_SPLIT);
 
     
-    for(int iteration=0;iteration<600;iteration++)
+    for(int iteration=0;iteration<50;iteration++)
     {
         printf("Iteration: %d\n",iteration);
         float error=0;
-        for(int i=0;i<floor(1000/BATCH_SIZE);i++)
+        for(int i=0;i<floor(5000/1000);i++)
         {
             memmove(in, (mnist_data.train_data+(i*784*BATCH_SIZE)), sizeof(float)*784*BATCH_SIZE);
             memmove(y, (mnist_data.train_labels+(i*10*BATCH_SIZE)), sizeof(float)*10*BATCH_SIZE);

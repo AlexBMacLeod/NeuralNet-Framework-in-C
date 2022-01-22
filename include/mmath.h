@@ -35,6 +35,10 @@ void matrixScalarMultiplication(Matrix*, float*, float);
 
 void matrixScalarMultiplicationInPlace(Matrix*, float);
 
+float conv1Step(Matrix*, Matrix*, int, int, int, int);
+
+void padDevolved2d(Matrix*, Matrix*, Matrix*,int);
+
 void nonpaddedConvolutionalKernel(Matrix*, Matrix*, Matrix*,int);
 /*
 So this is a bit of a beast but the basic idea is the same, we're sliding a kernel, or a number

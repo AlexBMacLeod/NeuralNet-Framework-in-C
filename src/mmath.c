@@ -236,12 +236,12 @@ void paddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int stri
     assert((in->shape.x)==out->shape.x);
     assert((in->shape.y)==out->shape.y);
     assert(kernel->shape.z==out->shape.z);
-    memset(out->data, 0, sizeof(float)*out->shape.n*out->shape.x*out->shape.y*out->shape.z);
+    //memset(out->data, 0, sizeof(float)*out->shape.n*out->shape.x*out->shape.y*out->shape.z);
     float sum=0;
     int pad = (kernel->shape.x-1)/2;
     int l, i, j, k, m, n, p;
     #pragma omp parallel shared(out,in,kernel, pad) private(l, i, j, k, m, n, p, sum)
-    {
+    //{
         #pragma omp for schedule(static)
         for(l=0; l<in->shape.n; l++)
         {
@@ -270,6 +270,46 @@ void paddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int stri
                         out->data[((l*(out->shape.x)+i)*(out->shape.y)+j)*out->shape.z+p] = sum;
                         sum=0;
                     }
+                }
+            }
+        }
+    //}
+}
+
+float conv1Step(Matrix* slice, Matrix* kernel, int height, int width, int channel, int img)
+{
+    float out = 0;
+    int h = slice->shape.x;
+    int w = slice->shape.y;
+    int c = slice->shape.z;
+    int kernel_size = kernel->shape.x;
+    int pad=(kernel_size-1)/2;
+    for(int i=0; i<kernel->shape.n; i++)
+    {
+        for(int j=0; j<kernel_size; j++)
+        {
+            for(int k=0; k<width; k++)
+            {
+                if((height+j-pad)>=0 && (width+k-pad)>=0 && (height+j)<slice->shape.x && (width+k)<slice->shape.y)
+                    out += kernel->data[((i*kernel_size+j)*kernel_size+k)*kernel_size+channel] * 
+                        slice->data[((img*h+(height+i-pad))*w+(width+j-pad))*c+k];
+            }
+        }
+    }
+    return out;
+}
+
+void padDevolved2d(Matrix* in, Matrix* kernel, Matrix* out, int stride)
+{
+    for(int i=0; i<in->shape.n; i++)
+    {
+        for(int h=0; h<in->shape.x; h++)
+        {
+            for(int w=0; w<in->shape.y; w++)
+            {
+                for(int c=0; c<kernel->shape.z; c++)
+                {
+                    out->data[((i*in->shape.x+h)*in->shape.y+w)*kernel->shape.z+c] = conv1Step(in, kernel, h, w, c, i);
                 }
             }
         }
