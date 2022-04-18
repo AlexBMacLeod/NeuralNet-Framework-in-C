@@ -37,9 +37,17 @@ conv2DLayer* createConv2DLayer(char activation[], struct Shape in, int stride, i
     layer->batch_size = batch_size;
     layer->in = in;
     layer->stride = stride;
-    if(layer->padding) {layer->out.n=in.n;layer->out.x=layer->in.x;layer->out.y=layer->in.y;layer->out.z=out_channels;
-    }else{ layer->out.x = (layer->in.x - (layer->kernel_size - 1))/layer->stride;
+    if(layer->padding){
+        layer->out.n=layer->in.n;
+        layer->out.x=layer->in.x;
+        layer->out.y=layer->in.y;
+        layer->out.z=out_channels;
+    }
+    else{ 
+        layer->out.x = (layer->in.x - (layer->kernel_size - 1))/layer->stride;
         layer->out.y = (layer->in.y - (layer->kernel_size - 1))/layer->stride;
+        layer->out.n = batch_size;
+        layer->out.z = out_channels;
     }
 
     makeKernelWeights( layer->kernels);
@@ -94,9 +102,10 @@ void addPadding(Matrix *img, int kernel_size)
 
 void forwardConv2D( conv2DLayer* layer)
 {
-    if(layer->padding){ 
+    if(layer->padding)
         padDevolved2d(layer->input, layer->kernels, layer->output,layer->stride);
-    }else {nonpaddedConvolutionalKernel(layer->input, layer->kernels, layer->output,layer->stride);}
+    else 
+        nonpaddedConvolutionalKernel(layer->input, layer->kernels, layer->output,layer->stride);
     layer->actFunc(layer);
     layer->derivFunc(layer);
 }
@@ -135,7 +144,8 @@ void backwardConv2D( conv2DLayer* layer, float *y)
                             {
                                 for(p=0;p<o_C;p++)
                                     {
-                                    if((j-pad)>=0 && (j+pad)<layer->out.x && (k-pad)>=0 && (k+pad)<layer->out.y){
+                                    if((j-pad)>=0 && (j+pad)<layer->out.x && (k-pad)>=0 && (k+pad)<layer->out.y)
+                                    {
                                         layer->delta->data[i*o_X*o_Y*i_C+(j-pad+m)*o_Y*i_C+(k-pad+n)*i_C+l]
                                         += layer->kernels->data[l*k_X*k_Y*o_C+m*k_Y*o_C+n*o_C+p]
                                         * layer->nextDelta->data[i*o_X*o_Y*o_C+j*o_Y*o_C+k*o_C+p];

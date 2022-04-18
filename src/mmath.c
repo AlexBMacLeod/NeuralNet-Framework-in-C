@@ -29,10 +29,12 @@ void matrixMultiplication(Matrix* A, Matrix* B, Matrix* C)
 {
     float sum;
     int i, j, k;
+    int fc = 0;
     if(B->shape.z==1 && A->shape.z==1){
         assert(A->shape.y == B->shape.n);
         assert(A->shape.n == C->shape.n);
         assert(B->shape.y == C->shape.y);
+        fc = 1;
     }else{
         int flat_b = B->shape.x*B->shape.y*B->shape.z;
         int flat_a = A->shape.x*A->shape.y*A->shape.z;
@@ -47,15 +49,34 @@ void matrixMultiplication(Matrix* A, Matrix* B, Matrix* C)
     //matrices are accessed since C stores arrays in row major form, coalescing memory accesses but that will be done
     //in the CUDA code, not here. Also CUDA allows the use of Shared memory and aggressive caching but these are also beyond
     //the scope of the basic C code
-    #pragma omp parallel shared(A,B,C) private(i, sum, j,k)
-    {
-        #pragma omp for schedule(static)
-        for (i = 0; i < A->shape.n; i++) {
-            for (j = 0; j < C->shape.y; j++) {
-                sum = 0;
-                for (k = 0; k < A->shape.y; k++)
-                    sum = sum + A->data[i * B->shape.n + k] * B->data[k * C->shape.y + j];
-                C->data[i * C->shape.y + j] = sum;
+    if(fc){
+        #pragma omp parallel shared(A,B,C) private(i, sum, j,k)
+        {
+            #pragma omp for schedule(static)
+            for (i = 0; i < A->shape.n; i++) {
+                for (j = 0; j < C->shape.y; j++) {
+                    sum = 0;
+                    for (k = 0; k < A->shape.y; k++)
+                        sum = sum + A->data[i * B->shape.n + k] * B->data[k * C->shape.y + j];
+                    C->data[i * C->shape.y + j] = sum;
+                }
+            }
+        }
+    }else{
+
+//A is Convolutional
+//is is going to be batch_size x flattened
+//B is weights so it's a matrix size flattened x out
+        #pragma omp parallel shared(A,B,C) private(i, sum, j,k)
+        {
+            for (i = 0; i < A->shape.n; i++) {
+                #pragma omp for schedule(static)
+                for (j = 0; j < C->shape.y; j++) {
+                    sum = 0;
+                    for (k = 0; k < B->shape.y; k++)
+                        sum = sum + A->data[i * B->shape.y + k] * B->data[k * C->shape.y + j];
+                    C->data[i * C->shape.y + j] = sum;
+                }
             }
         }
     }
@@ -278,27 +299,40 @@ void paddedConvolutionalKernel(Matrix* in, Matrix* kernel, Matrix* out, int stri
 
 float conv1Step(Matrix* slice, Matrix* kernel, int height, int width, int channel, int img)
 {
-    float out = 0;
+    float out = 0.0;
     int h = slice->shape.x;
     int w = slice->shape.y;
     int c = slice->shape.z;
+    int num = kernel->shape.z;
     int kernel_size = kernel->shape.x;
     int pad=(kernel_size-1)/2;
     for(int i=0; i<kernel->shape.n; i++)
     {
         for(int j=0; j<kernel_size; j++)
         {
-            for(int k=0; k<width; k++)
+            for(int k=0; k<kernel_size; k++)
             {
-                if((height+j-pad)>=0 && (width+k-pad)>=0 && (height+j)<slice->shape.x && (width+k)<slice->shape.y)
-                    out += kernel->data[((i*kernel_size+j)*kernel_size+k)*kernel_size+channel] * 
-                        slice->data[((img*h+(height+i-pad))*w+(width+j-pad))*c+k];
+                if((height-pad+j)>=0 && (width-pad+k)>=0 && (height+j-pad)<slice->shape.x && (width+k-pad)<slice->shape.y)
+                    out += 
+                    kernel->data[((i*kernel_size+j)*kernel_size+k)*num+channel]
+//switched i * kernel_size to i * kernel->shape.n
+//kernel->data[((i*kernel_size+j)*kernel_size+k)*kernel_size+channel]
+                    * slice->data[((img*h+(height+j-pad))*w+(width+k-pad))*c+i];
+
+                else
+                    out += 0.0f;
             }
         }
     }
     return out;
 }
-
+/*
+out += kernel->data[((i*kernel_size+j)*kernel_size+k)*kernel_size+channel] * 
+slice->data[((img*h+(height+i-pad))*w+(width+j-pad))*c+k];
+l=in.shape.n; i=
+data[((l*(out->shape.x)+(m+i-pad))*(out->shape.y)+(n+j-pad))*in->shape.z+k];
+((img*h + height)*w + width)*c + k;
+*/
 void padDevolved2d(Matrix* in, Matrix* kernel, Matrix* out, int stride)
 {
     for(int i=0; i<in->shape.n; i++)

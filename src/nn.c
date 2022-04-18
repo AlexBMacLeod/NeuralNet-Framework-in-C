@@ -67,6 +67,7 @@ void InsertAtHead(char activation[], int out) {
 		newNode = GetNewNode(activation, head->layer->out, out, head->layer->batch_size);
 	}else if(strncmp(head->layerType, "conv2d", 7)==0){
 		int flatten = head->convLayer->out.x*head->convLayer->out.y*head->convLayer->out.z;
+		//printf("%d\n", flatten);
 		newNode = GetNewNode(activation, flatten, out, head->convLayer->batch_size);
 	}else if(strncmp(head->layerType, "input", 6)==0){
 		head->input->flatten(head->input);
@@ -112,7 +113,7 @@ void InsertC2DAtHead(char activation[], int in_channels, int out_channels, int k
 	}
 	head->prev = newNode;
 	newNode->next = head;
-		if(strncmp(head->layerType, "linear", 7)==0){
+	if(strncmp(head->layerType, "linear", 7)==0){
 		newNode->convLayer->lr = head->layer->lr; 
 		newNode->convLayer->input = head->layer->output;
 		head->layer->nextDelta = newNode->convLayer->delta;
