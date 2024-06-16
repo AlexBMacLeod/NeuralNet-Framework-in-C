@@ -109,7 +109,7 @@ void InsertAtHead(char activation[], int out) {
 			break;
 
 		default:
-			fprintf(stderr, "Could not find layerType %s", head->layerType);
+			fprintf(stderr, "Could not find layerType %d", head->layerType);
 			exit(1);
 	}
 	head = newNode;
@@ -133,7 +133,7 @@ void InsertC2DAtHead(char activation[], int in_channels, int out_channels, int k
 			break;
 
 		default:
-			fprintf(stderr, "Could not find layerType %s", head->layerType);
+			fprintf(stderr, "Could not find layerType %d", head->layerType);
 			exit(1);
 	}
 
@@ -162,7 +162,7 @@ void InsertC2DAtHead(char activation[], int in_channels, int out_channels, int k
 			break;
 
 		default:
-			fprintf(stderr, "Could not find layerType %s", head->layerType);
+			fprintf(stderr, "Could not find layerType %d", head->layerType);
 			exit(1);
 	}
 	head = newNode;
@@ -201,7 +201,7 @@ void Forward(float *input, float *output) {
 	memmove(temp->input->output->data, input, sizeof(float)*temp->input->flat*temp->input->out.n);
 	temp = temp->prev;
 	while(temp != NULL) {
-		if(temp->layer == LAYER_FULL){
+		if(temp->layerType == LAYER_FULL){
         	temp->layer->forward_pass(temp->layer);
 		}else if(temp->layerType == LAYER_CONV){
 			temp->convLayer->forward_pass(temp->convLayer);
