@@ -6,10 +6,16 @@
 #include "conv2d.h"
 #include "input.h"
 
+typedef enum _layerType {
+    LAYER_INPUT = 0,
+    LAYER_FULL,
+    LAYER_CONV
+} layerType;
+
 struct Node  {
 	struct Node* next;
 	struct Node* prev;
-	char layerType[20];
+    layerType layerType;	
 	union{
     	LinearLayer *layer;
 		conv2DLayer *convLayer;
